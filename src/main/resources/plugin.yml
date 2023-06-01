@@ -1,0 +1,9 @@
+name: ultimate_market
+version: '${project.version}'
+main: org.intrigger.ultimate_market.Ultimate_market
+api-version: 1.16
+commands:
+  ah:
+    description: "Opens Ultimate Market main menu"
+    aliases: market
+    usage: /ah

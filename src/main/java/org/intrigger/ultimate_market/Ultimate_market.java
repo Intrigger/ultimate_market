@@ -1,0 +1,31 @@
+package org.intrigger.ultimate_market;
+
+import org.bukkit.ChatColor;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.intrigger.ultimate_market.commands.MarketExecutor;
+import org.intrigger.ultimate_market.commands.MarketTabComplete;
+import org.intrigger.ultimate_market.listeners.ClickHandler;
+
+import java.util.Objects;
+import java.util.logging.Logger;
+
+public final class Ultimate_market extends JavaPlugin {
+
+    public static Logger LOGGER;
+
+    @Override
+    public void onEnable() {
+        LOGGER = getLogger();
+        LOGGER.info(ChatColor.DARK_PURPLE  + "Ultimate Market " + ChatColor.RESET + "plugin has been " + ChatColor.GREEN + "enabled!");
+        Objects.requireNonNull(getCommand("ah")).setExecutor(new MarketExecutor(this));
+        Objects.requireNonNull(getCommand("ah")).setTabCompleter(new MarketTabComplete());
+
+        new ClickHandler(this, LOGGER);
+
+    }
+
+    @Override
+    public void onDisable() {
+        LOGGER.info(ChatColor.DARK_PURPLE  + "Ultimate Market " + ChatColor.RESET + "plugin has been " + ChatColor.RED + "disabled!");
+    }
+}
