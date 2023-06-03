@@ -1,5 +1,7 @@
 package org.intrigger.ultimate_market.commands;
 
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.TranslatableComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -18,6 +20,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.checkerframework.checker.units.qual.A;
+import org.intrigger.ultimate_market.utils.ItemStackNotation;
+import org.intrigger.ultimate_market.utils.ItemStorage;
+import org.intrigger.ultimate_market.utils.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import net.milkbowl.vault.chat.Chat;
@@ -27,8 +32,12 @@ import net.milkbowl.vault.permission.Permission;
 
 
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
+import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.Bukkit.getServer;
 import static org.intrigger.ultimate_market.Ultimate_market.LOGGER;
 
@@ -39,16 +48,32 @@ public class MarketExecutor implements CommandExecutor  {
 
     private static Plugin plugin;
 
+    private static File file;
+    private static FileConfiguration configuration;
+
+    private static ItemStorage storage;
+
+    private static Map<String, Integer> playerCurrentPage;
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
         playerCurrentMenu = new HashMap<>();
         plugin = _plugin;
+        storage = new ItemStorage("plugins/Ultimate Market/");
+        playerCurrentPage = new HashMap<>();
     }
-    public Inventory generateMainMenu(){
+
+    int getTotalPages(int totalItemsNumber){
+        return (int) (Math.ceil((double)totalItemsNumber / 45.0));
+    }
+
+    public Inventory generateMainMenu(String playerName){
         String inventoryName = "Ultimate Market Menu";
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
+        /*
+            My Auction Slots Page Button
+         */
         ItemStack mySlots = new ItemStack(Material.CHEST);
         ItemMeta mySlotsMeta = mySlots.getItemMeta();
         mySlotsMeta.setDisplayName(ChatColor.GOLD + "Мой Аукцион");
@@ -62,72 +87,95 @@ public class MarketExecutor implements CommandExecutor  {
         mySlots.setItemMeta(mySlotsMeta);
         inventory.setItem(0, mySlots);
 
-        File file = new File( "plugins/Ultimate Market/sold_items.yml");
-        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        /*
+            Update Page Button
+         */
+        ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+        ItemMeta updatePageMeta = updatePage.getItemMeta();
+        updatePageMeta.setDisplayName(ChatColor.GOLD + "Обновить страницу");
+        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы обновить",
+                             ChatColor.GREEN + "текущую страницу");
+        updatePageMeta.setLore(lore);
 
-        ArrayList<String> myKeys = new ArrayList<>();
+        pdc = updatePageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+        updatePage.setItemMeta(updatePageMeta);
+        inventory.setItem(4, updatePage);
 
-        Set<String> keysSet =  Objects.requireNonNull(configuration.getKeys(false));
-        String[] keys = new String[keysSet.size()];
-        keysSet.toArray(keys);
+        //
+        // LEFT PAGE
+        //
+        ItemStack leftPage = new ItemStack(Material.PAPER);
+        ItemMeta leftPageMeta = leftPage.getItemMeta();
+        leftPageMeta.setDisplayName(ChatColor.GOLD + "Предыдущая страница");
+        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы попасть",
+                ChatColor.GREEN + "на страницу назад");
+        leftPageMeta.setLore(lore);
 
-        Map<String, Long> uniqueKeyAndTime = new HashMap<>();
-        LinkedHashMap<String, Long> sortedMap = new LinkedHashMap<>();
+        pdc = leftPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+        leftPage.setItemMeta(leftPageMeta);
+        inventory.setItem(3, leftPage);
+
+        //
+        // RIGHT PAGE
+        //
+        ItemStack rightPage = new ItemStack(Material.PAPER);
+        ItemMeta rightPageMeta = rightPage.getItemMeta();
+        rightPageMeta.setDisplayName(ChatColor.GOLD + "Следующая страница");
+        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы попасть",
+                ChatColor.GREEN + "на страницу вперед");
+        rightPageMeta.setLore(lore);
+
+        pdc = rightPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+        rightPage.setItemMeta(rightPageMeta);
+        inventory.setItem(5, rightPage);
+
+        /*
+            Sorting items from 'items sold file' by time
+         */
+
+        long now = System.currentTimeMillis();
+
+        ArrayList<ItemStackNotation> queryResult = storage.getAllKeysOrderByTime(playerCurrentPage.get(playerName));
 
 
-        for (String key: keys){
-            uniqueKeyAndTime.put(key, configuration.getLong(key + ".time"));
-        }
+        if (queryResult != null){
+            int currentSlot = 9;
 
-        ArrayList<Long> sortedKeysByTime = new ArrayList<>();
 
-        for (Map.Entry<String, Long> entry: uniqueKeyAndTime.entrySet()){
-            sortedKeysByTime.add(entry.getValue());
-        }
-        sortedKeysByTime.sort(new Comparator<Long>() {
-            public int compare(Long l1, Long l2) {
-                long dif = l1 - l2;
-                if (dif > 0) return -1;
-                else if (dif < 0) return 1;
-                else return 0;
+            for (int key = 0; key < queryResult.size(); key++){
+                if (currentSlot > 53) break;
+                ItemStackNotation currentItemStackNotation = queryResult.get(key);
+
+                ItemStack currentItemStack = ItemStack.deserializeBytes(currentItemStackNotation.bytes);
+
+                String owner = currentItemStackNotation.owner;
+                long price = currentItemStackNotation.price;
+                ArrayList<String> newLore = new ArrayList<>();
+                newLore.add(ChatColor.BLUE + "Продавец: " + ChatColor.LIGHT_PURPLE + owner);
+                newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
+
+                ItemMeta currentItemMeta = currentItemStack.getItemMeta();
+                List<String> currentLore = currentItemStack.getLore();
+
+                if (currentLore != null)
+                    newLore.addAll(currentLore);
+
+                currentItemMeta.setLore(newLore);
+                currentItemStack.setItemMeta(currentItemMeta);
+                inventory.setItem(currentSlot, currentItemStack);
+                currentSlot++;
             }
-        });
-
-        for (Long value: sortedKeysByTime){
-            for (Map.Entry<String, Long> entry: uniqueKeyAndTime.entrySet()){
-                if (entry.getValue().equals(value)){
-                    sortedMap.put(entry.getKey(), value);
-                }
-            }
-        }
-
-        int keysSize = keys.length;
-
-        int currentSlot = 9;
-
-        for (Map.Entry<String, Long> entry : sortedMap.entrySet()){
-            if (currentSlot > 53) break;
-            String key = entry.getKey();
-            ItemStack currentItemStack = ItemSerialization.toInventory(configuration, key);
-            String owner = configuration.getString(key + ".owner");
-            long price = configuration.getLong(key + ".price");
-            ArrayList<String> newLore = new ArrayList<String>();
-            newLore.add(ChatColor.BLUE + "Продавец: " + ChatColor.LIGHT_PURPLE + owner);
-            newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
-
-            ItemMeta currentItemMeta = currentItemStack.getItemMeta();
-            List<String> currentLore = currentItemStack.getLore();
-
-            if (currentLore != null)
-                newLore.addAll(currentLore);
-
-            currentItemMeta.setLore(newLore);
-            currentItemStack.setItemMeta(currentItemMeta);
-            inventory.setItem(currentSlot, currentItemStack);
-            currentSlot++;
         }
 
         menus.put("MAIN_MENU", inventory);
+
+        LOGGER.info(ChatColor.GREEN + "Generating Main Menu Time Elapsed " + (System.currentTimeMillis() - now) + " ms");
 
         return inventory;
     }
@@ -137,21 +185,7 @@ public class MarketExecutor implements CommandExecutor  {
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
-        File file = new File( "plugins/Ultimate Market/sold_items.yml");
-        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-        ArrayList<String> myKeys = new ArrayList<>();
-
-        Set<String> keysSet =  Objects.requireNonNull(configuration.getKeys(false));
-        String[] keys = new String[keysSet.size()];
-        keysSet.toArray(keys);
-        for (String key: keys){
-            String itemOwner = Objects.requireNonNull(configuration.getConfigurationSection(key)).getString("owner");
-            if (itemOwner == null) continue;
-            if (itemOwner.equals(player.getName())){
-                myKeys.add(key);
-            }
-        }
+        ArrayList<ItemStackNotation> myItems = storage.getAllPlayerItems(player.getName());
 
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
@@ -170,20 +204,36 @@ public class MarketExecutor implements CommandExecutor  {
         homeItem.setItemMeta(homeItemMeta);
         inventory.setItem(0, homeItem);
 
-        int keysSize = myKeys.size();
+        if (myItems != null){
+            int keysSize = myItems.size();
 
-        for (int key = 0; key < keysSize; key++){
-            ItemStack currentItemStack = ItemSerialization.toInventory(configuration, myKeys.get(key));
-            ArrayList<String> newLore = new ArrayList<>();
-            long price = configuration.getLong(myKeys.get(key) + ".price");
-            newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
-            List<String> currentLore = currentItemStack.getLore();
-            if (currentLore != null)
-                newLore.addAll(currentLore);
+            for (int key = 0; key < Math.min(54-9, keysSize); key++){
+                ItemStackNotation currentItemStackNotation = myItems.get(key);
+                ItemStack currentItemStack = (ItemStack.deserializeBytes(currentItemStackNotation.bytes));
+                ArrayList<String> newLore = new ArrayList<>();
+                long price = currentItemStackNotation.price;
 
-            newLore.add(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)");
-            currentItemStack.setLore(newLore);
-            inventory.setItem(key + 9, currentItemStack);
+                List<String> currentLore = currentItemStack.getLore();
+
+                if (currentLore == null){
+                    newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
+                    newLore.add(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)");
+                }
+                else{
+                    if (!currentLore.contains(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪")){
+                        newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
+                    }
+
+                    newLore.addAll(currentLore);
+
+                    if (!currentLore.contains(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)")){
+                        newLore.add(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)");
+                    }
+                }
+
+                currentItemStack.setLore(newLore);
+                inventory.setItem(key + 9, currentItemStack);
+            }
         }
 
         menus.put("MY_SOLD_ITEMS", inventory);
@@ -194,6 +244,9 @@ public class MarketExecutor implements CommandExecutor  {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
+        //TODO Добавить макс. количество предметов для продажи для каждой привилегии
+        //TODO Добавить перевод языка для купленного предмета (ENG --> ANY)
+
         if (!(commandSender instanceof Player)){
             commandSender.sendMessage(ChatColor.RED + "This command can be used only by player!");
             return true;
@@ -203,7 +256,8 @@ public class MarketExecutor implements CommandExecutor  {
 
         if (strings.length == 0){
             playerCurrentMenu.put(player.getName(), "MAIN_MENU");
-            player.openInventory(generateMainMenu());
+            playerCurrentPage.put(player.getName(), 0);
+            player.openInventory(generateMainMenu(player.getName()));
         } else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
                 player.sendMessage(ChatColor.RED + "Неверное использования команды /market (/ah).");
@@ -222,50 +276,44 @@ public class MarketExecutor implements CommandExecutor  {
                 return true;
             }
 
+            long price = Long.parseLong(strings[1]);
 
-            File file = new File( "plugins/Ultimate Market/sold_items.yml");
-            FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
-
-            int itemID = -1;
-
-            if (configuration.getConfigurationSection(player.getName()) != null){
-                Set<String> keysSet =  Objects.requireNonNull(configuration.getConfigurationSection(player.getName())).getKeys(false);
-                String[] keys = new String[keysSet.size()];
-                keysSet.toArray(keys);
-                itemID = Integer.parseInt(keys[keys.length - 1]);
+            if (price < 0){
+                player.sendMessage(ChatColor.RED + "Вы указали цену меньше 0. Цена должна быть неотрицательной!");
+                return true;
             }
 
-            String unique_id = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
+            String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
                     StringBuilder::appendCodePoint, StringBuilder::append).toString();
 
             ItemMeta meta = itemToSell.getItemMeta();
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
-            pdc.set(namespacedKey, PersistentDataType.STRING, unique_id);
+            pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
 
             itemToSell.setItemMeta(meta);
 
-            ItemSerialization.saveInventory(itemToSell, configuration, unique_id, Long.parseLong(strings[1]), player.getName(), System.nanoTime());
+            //ItemSerialization.saveInventory(itemToSell, configuration, unique_id, Long.parseLong(strings[1]), player.getName(), System.nanoTime());
 
-            try {
-                configuration.save(file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell);
 
             player.getItemInHand().setAmount(0);
             player.sendMessage(ChatColor.GOLD + "Вы успешно выставили предмет на продажу!");
 
+            if (price == 0){
+                player.sendMessage(ChatColor.AQUA + "" + ChatColor.ITALIC + "Так как Вы указали цену равную 0, то не получите денег за продажу товара.");
+            }
+
         }
-
-
         return true;
     }
 
     public void onMenuItemClick(Player player, ItemStack item){
 
-        String currentMenu = playerCurrentMenu.get(player.getName());
+        String playerName = player.getName();
+        String currentMenu = playerCurrentMenu.get(playerName);
+
 
         if (currentMenu.equals("MAIN_MENU")){
 
@@ -275,9 +323,26 @@ public class MarketExecutor implements CommandExecutor  {
             if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)){
                 menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                 assert menu_item_key != null;
+
+                int pagesNum = getTotalPages(storage.getTotalItems()) - 1;
+
+                int currentPage = playerCurrentPage.get(playerName);
+
                 if (menu_item_key.equals("MY_SOLD_ITEMS")) { // my sold items
+                    playerCurrentMenu.put(playerName, "MY_SOLD_ITEMS");
                     player.openInventory(generateMySoldItemsMenu(player));
-                    playerCurrentMenu.put(player.getName(), "MY_SOLD_ITEMS");
+                }
+                else if (menu_item_key.equals("UPDATE_PAGE")){
+                    playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
+                    player.openInventory(generateMainMenu(playerName));
+                }
+                else if (menu_item_key.equals("PAGE_LEFT")){
+                    playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                    player.openInventory(generateMainMenu(playerName));
+                }
+                else if (menu_item_key.equals("PAGE_RIGHT")){
+                    playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
+                    player.openInventory(generateMainMenu(playerName));
                 }
             }
             else{
@@ -288,21 +353,21 @@ public class MarketExecutor implements CommandExecutor  {
                 if (rsp == null) {
                     return;
                 }
-                long balance = (long) rsp.getProvider().getBalance(player.getName());
-                File file = new File( "plugins/Ultimate Market/sold_items.yml");
-                FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+                long balance = (long) rsp.getProvider().getBalance(playerName);
+
                 String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
 
-                if (configuration.getConfigurationSection(unique_key) == null){
+                if (storage.getItem(unique_key) == null){
                     player.sendMessage(ChatColor.AQUA + "Этот предмет уже продан!");
+                    player.openInventory(generateMainMenu(playerName));
                     return;
                 }
 
-                assert unique_key != null;
-                String itemOwner = Objects.requireNonNull(configuration.getConfigurationSection(unique_key)).getString("owner");
-                long price = Objects.requireNonNull(configuration.getConfigurationSection(unique_key)).getLong("price");
+                ItemStackNotation notation = storage.getItem(unique_key);
+                String itemOwner = notation.owner;
+                long price = notation.price;
 
-                if (Objects.equals(itemOwner, player.getName())){
+                if (Objects.equals(itemOwner, playerName)){
                     player.sendMessage(ChatColor.GOLD + "Нельзя купить свой предмет!");
                     return;
                 }
@@ -312,6 +377,8 @@ public class MarketExecutor implements CommandExecutor  {
                 }
 
                 ItemMeta meta = item.getItemMeta();
+
+
                 pdc = meta.getPersistentDataContainer();
                 NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
                 pdc.remove(namespacedKey);
@@ -338,25 +405,35 @@ public class MarketExecutor implements CommandExecutor  {
                     }
                 }
 
-                assert unique_key != null;
-                configuration.set(unique_key, null);
 
-                try {
-                    configuration.save(file);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+//                try {
+//                    configuration.save(file);
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
 
                 if (!hasEmptySlot){
                     player.sendMessage(ChatColor.RED + "Освободите место в инвентаре, чтобы снять предмет с продажи!");
                 }
 
-                rsp.getProvider().withdrawPlayer(player.getName(), price);
+                rsp.getProvider().withdrawPlayer(playerName, price);
                 rsp.getProvider().depositPlayer(itemOwner, price);
 
-                getServer().getPlayer(itemOwner).sendMessage(ChatColor.GREEN + "Игрок " + ChatColor.LIGHT_PURPLE + player.getName() + ChatColor.GREEN + " купил " + ChatColor.AQUA + item.getItemMeta().getDisplayName() + ChatColor.GREEN + " за " + ChatColor.GOLD + price + " ✪ !");
+
+                if (getServer().getOnlinePlayers().contains(getServer().getPlayer(itemOwner))) {
+                    String message = "";
+                    if (item.getItemMeta().getDisplayName().isEmpty()){
+                        message = ChatColor.GREEN + "Игрок " + ChatColor.LIGHT_PURPLE + playerName + ChatColor.GREEN + " купил " + ChatColor.AQUA + item.getI18NDisplayName() + ChatColor.GRAY + " (x" + item.getAmount() + ")" + ChatColor.GREEN + " за " + ChatColor.GOLD + price + " ✪";
+                    }
+                    else{
+                        message = ChatColor.GREEN + "Игрок " + ChatColor.LIGHT_PURPLE + playerName + ChatColor.GREEN + " купил " + ChatColor.AQUA + item.getItemMeta().getDisplayName() + ChatColor.GRAY + " (x" + item.getAmount() + ")" + ChatColor.GREEN + " за " + ChatColor.GOLD + price + " ✪";
+                    }
+                    Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
+                }
                 player.sendMessage(ChatColor.GREEN + "Вы успешно приобрели предмет за " + ChatColor.GOLD + price + "✪ !");
-                player.openInventory(generateMainMenu());
+
+                storage.removeItem(unique_key);
+                player.openInventory(generateMainMenu(playerName));
             }
         }
         else if (currentMenu.equals("MY_SOLD_ITEMS")){
@@ -367,8 +444,8 @@ public class MarketExecutor implements CommandExecutor  {
             if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)){
                 menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                 if (menu_item_key.equals("MAIN_MENU")){
-                    player.openInventory(generateMainMenu());
-                    playerCurrentMenu.put(player.getName(), "MAIN_MENU");
+                    player.openInventory(generateMainMenu(playerName));
+                    playerCurrentMenu.put(playerName, "MAIN_MENU");
                 }
             }
             else{
@@ -376,14 +453,12 @@ public class MarketExecutor implements CommandExecutor  {
 
                 for (int slot = 35; slot >= 0; slot--){
                     if (player.getInventory().getItem(slot) == null){
-                        File file = new File( "plugins/Ultimate Market/sold_items.yml");
-                        FileConfiguration configuration = YamlConfiguration.loadConfiguration(file);
 
                         ItemMeta meta = item.getItemMeta();
 
                         String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
 
-                        if (configuration.getConfigurationSection(unique_key) == null){
+                        if (storage.getItem(unique_key) == null){
                             player.sendMessage(ChatColor.AQUA + "Этот предмет уже продан!");
                             player.openInventory(generateMySoldItemsMenu(player));
                             return;
@@ -404,13 +479,8 @@ public class MarketExecutor implements CommandExecutor  {
 
                         item.setLore(newLore);
 
-                        assert unique_key != null;
-                        configuration.set(unique_key, null);
-                        try {
-                            configuration.save(file);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        storage.removeItem(unique_key);
+
                         player.getInventory().setItem(slot, item);
                         player.openInventory(generateMySoldItemsMenu(player));
                         slot = -1;
@@ -428,5 +498,4 @@ public class MarketExecutor implements CommandExecutor  {
 
 
     }
-
 }

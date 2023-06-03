@@ -13,14 +13,19 @@ public final class Ultimate_market extends JavaPlugin {
 
     public static Logger LOGGER;
 
+    MarketExecutor marketExecutor;
+
     @Override
     public void onEnable() {
         LOGGER = getLogger();
         LOGGER.info(ChatColor.DARK_PURPLE  + "Ultimate Market " + ChatColor.RESET + "plugin has been " + ChatColor.GREEN + "enabled!");
-        Objects.requireNonNull(getCommand("ah")).setExecutor(new MarketExecutor(this));
+
+        marketExecutor = new MarketExecutor(this);
+
+        Objects.requireNonNull(getCommand("ah")).setExecutor(marketExecutor);
         Objects.requireNonNull(getCommand("ah")).setTabCompleter(new MarketTabComplete());
 
-        new ClickHandler(this, LOGGER);
+        new ClickHandler(this, LOGGER, marketExecutor);
 
     }
 

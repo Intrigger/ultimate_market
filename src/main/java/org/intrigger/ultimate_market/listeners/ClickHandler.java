@@ -26,11 +26,11 @@ public class ClickHandler implements Listener {
 
     private static MarketExecutor executor;
 
-    public ClickHandler(Ultimate_market _plugin, Logger _logger){
+    public ClickHandler(Ultimate_market _plugin, Logger _logger, MarketExecutor marketExecutor){
         Bukkit.getPluginManager().registerEvents(this, _plugin);
         plugin = _plugin;
         LOGGER = _logger;
-        executor = new MarketExecutor(plugin);
+        executor = marketExecutor;
     }
 
     @EventHandler
