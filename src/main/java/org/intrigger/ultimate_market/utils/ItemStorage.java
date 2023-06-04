@@ -6,6 +6,7 @@ import java.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
+import org.intrigger.ultimate_market.commands.MarketExecutor;
 import org.json.simple.JSONObject;
 
 import java.sql.*;
@@ -23,6 +24,14 @@ public class ItemStorage {
         createParser();
     }
 
+    public void closeConnection() {
+        try{
+            conn.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
     public void createParser() {
         try {
             conn = DriverManager.getConnection("jdbc:sqlite:" + storageFilePath + "sold_items.db");
@@ -33,6 +42,7 @@ public class ItemStorage {
                     "TIME INT," +
                     "OWNER TEXT," +
                     "PRICE INT," +
+                    "MATERIAL TEXT," +
                     "BYTES TEXT" +
                     ");";
             statement.execute(sql);
@@ -44,10 +54,10 @@ public class ItemStorage {
         Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's Items Database Created Successfully!");
     }
 
-    public void addItem(String key, String ownerName, long price, long time, ItemStack item){
+    public void addItem(String key, String ownerName, long price, long time, String material, ItemStack item){
         byte[] itemBytes = item.serializeAsBytes();
 
-        String sql = "INSERT INTO items (KEY, TIME, OWNER, PRICE, BYTES) VALUES(?, ?, ?, ?, ?);";
+        String sql = "INSERT INTO items (KEY, TIME, OWNER, PRICE, MATERIAL, BYTES) VALUES(?, ?, ?, ?, ?, ?);";
 
         try {
 
@@ -56,7 +66,8 @@ public class ItemStorage {
             statement.setLong(2, time);
             statement.setString(3, ownerName);
             statement.setLong(4, price);
-            statement.setBytes(5, itemBytes);
+            statement.setString(5, material);
+            statement.setBytes(6, itemBytes);
             statement.execute();
             statement.closeOnCompletion();
         } catch (SQLException e) {
@@ -177,8 +188,18 @@ public class ItemStorage {
             e.printStackTrace();
         }
     }
-    public int getTotalItems(){
-        String sql = "SELECT COUNT() FROM items;";
+    public int getTotalItems(ArrayList<String> filters){
+        String sql;
+        if (filters == null) sql = "SELECT COUNT() FROM items;";
+        else {
+            sql = "SELECT COUNT() FROM items WHERE ";
+
+            for (int i = 0; i < filters.size() - 1; i++){
+                sql += "material = " + "\"" + filters.get(i) + "\"" + " OR ";
+            }
+
+            sql += "material = " + "\"" + filters.get(filters.size() - 1) + "\"";
+        }
         try{
             PreparedStatement statement = conn.prepareStatement(sql);
             ResultSet result = statement.executeQuery();
@@ -192,5 +213,48 @@ public class ItemStorage {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public ArrayList<ItemStackNotation> getAllItemsFiltered(ArrayList<String> filters, int page){
+        String sql = "SELECT * FROM items WHERE ";
+
+        for (int i = 0; i < filters.size() - 1; i++){
+            sql += "material = " + "\"" + filters.get(i) + "\"" + " OR ";
+        }
+
+        sql += "material = " + "\"" + filters.get(filters.size() - 1) + "\"";
+
+        sql += "ORDER BY time DESC";
+
+        try{
+            PreparedStatement statement = conn.prepareStatement(sql);
+            ResultSet result = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            ArrayList<ItemStackNotation> itemsToReturn = new ArrayList<>();
+
+
+            for (int i = 0; i < (page * 45); i++){
+                result.next();
+            }
+
+            for (int i = 0; i < 45; i++){
+                if (!result.next()) break;
+                itemsToReturn.add(new ItemStackNotation(result.getString("key"),
+                                result.getString("owner"),
+                                result.getLong("price"),
+                                result.getLong("time"),
+                                result.getBytes("bytes")
+                        )
+                );
+            }
+            return itemsToReturn;
+
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

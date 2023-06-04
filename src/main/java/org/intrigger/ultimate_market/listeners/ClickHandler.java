@@ -38,8 +38,6 @@ public class ClickHandler implements Listener {
 
         if (!(event.getView().title() instanceof TextComponent)) return;
 
-        Inventory inventory = event.getInventory();
-
         String inventoryName = ((TextComponent) event.getView().title()).content();
         if (!inventoryName.equals("Ultimate Market Menu")) return;
 

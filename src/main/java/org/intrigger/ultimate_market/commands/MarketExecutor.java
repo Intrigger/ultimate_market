@@ -20,6 +20,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.checkerframework.checker.units.qual.A;
+import org.intrigger.ultimate_market.utils.ItemCategoriesProcessor;
 import org.intrigger.ultimate_market.utils.ItemStackNotation;
 import org.intrigger.ultimate_market.utils.ItemStorage;
 import org.intrigger.ultimate_market.utils.Pair;
@@ -54,19 +55,27 @@ public class MarketExecutor implements CommandExecutor  {
     private static ItemStorage storage;
 
     private static Map<String, Integer> playerCurrentPage;
+    private static Map<String, String> playerCurrentItemFilter;
+    public static ItemCategoriesProcessor itemCategoriesProcessor;
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
         playerCurrentMenu = new HashMap<>();
         plugin = _plugin;
         storage = new ItemStorage("plugins/Ultimate Market/");
         playerCurrentPage = new HashMap<>();
+        itemCategoriesProcessor = new ItemCategoriesProcessor("plugins/Ultimate Market/item_categories.yml");
+        playerCurrentItemFilter = new HashMap<>();
+    }
+
+    public void closeDatabase(){
+        storage.closeConnection();
     }
 
     int getTotalPages(int totalItemsNumber){
-        return (int) (Math.ceil((double)totalItemsNumber / 45.0));
+        return (int) (1 + Math.floor((double)totalItemsNumber / 45.0));
     }
 
-    public Inventory generateMainMenu(String playerName){
+    public Inventory generateMainMenu(String playerName, String filter){
         String inventoryName = "Ultimate Market Menu";
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
@@ -135,14 +144,34 @@ public class MarketExecutor implements CommandExecutor  {
         rightPage.setItemMeta(rightPageMeta);
         inventory.setItem(5, rightPage);
 
+        //
+        // CATEGORIES PAGE
+        //
+        ItemStack categoriesPage = new ItemStack(Material.FEATHER);
+        ItemMeta categoriesPageMeta = categoriesPage.getItemMeta();
+        categoriesPageMeta.setDisplayName(ChatColor.GOLD + "Категории предметом");
+        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы выбрать",
+                ChatColor.GREEN + "категорию предметов");
+        categoriesPageMeta.setLore(lore);
+
+        pdc = categoriesPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "CATEGORIES_MENU");
+        categoriesPage.setItemMeta(categoriesPageMeta);
+        inventory.setItem(8, categoriesPage);
+
         /*
             Sorting items from 'items sold file' by time
          */
 
         long now = System.currentTimeMillis();
 
-        ArrayList<ItemStackNotation> queryResult = storage.getAllKeysOrderByTime(playerCurrentPage.get(playerName));
 
+
+        ArrayList<ItemStackNotation> queryResult;
+
+        if (filter == null) queryResult = storage.getAllKeysOrderByTime(playerCurrentPage.get(playerName));
+        else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName));
 
         if (queryResult != null){
             int currentSlot = 9;
@@ -257,7 +286,8 @@ public class MarketExecutor implements CommandExecutor  {
         if (strings.length == 0){
             playerCurrentMenu.put(player.getName(), "MAIN_MENU");
             playerCurrentPage.put(player.getName(), 0);
-            player.openInventory(generateMainMenu(player.getName()));
+            playerCurrentItemFilter.put(player.getName(), null);
+            player.openInventory(generateMainMenu(player.getName(), null));
         } else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
                 player.sendMessage(ChatColor.RED + "Неверное использования команды /market (/ah).");
@@ -296,13 +326,14 @@ public class MarketExecutor implements CommandExecutor  {
 
             //ItemSerialization.saveInventory(itemToSell, configuration, unique_id, Long.parseLong(strings[1]), player.getName(), System.nanoTime());
 
-            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell);
+
+            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell);
 
             player.getItemInHand().setAmount(0);
             player.sendMessage(ChatColor.GOLD + "Вы успешно выставили предмет на продажу!");
 
             if (price == 0){
-                player.sendMessage(ChatColor.AQUA + "" + ChatColor.ITALIC + "Так как Вы указали цену равную 0, то не получите денег за продажу товара.");
+                player.sendMessage(ChatColor.AQUA + "" + ChatColor.ITALIC + "Так как Вы указали цену равную 0, Вы не получите денег за продажу товара.");
             }
 
         }
@@ -324,7 +355,14 @@ public class MarketExecutor implements CommandExecutor  {
                 menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                 assert menu_item_key != null;
 
-                int pagesNum = getTotalPages(storage.getTotalItems()) - 1;
+                String currentFilter = playerCurrentItemFilter.get(playerName);
+                ArrayList<String> filters;
+                if (currentFilter == null) filters = null;
+                else{
+                    filters = itemCategoriesProcessor.filterNotations.get(currentFilter).filters;
+                }
+
+                int pagesNum = getTotalPages(storage.getTotalItems(filters)) - 1;
 
                 int currentPage = playerCurrentPage.get(playerName);
 
@@ -334,15 +372,20 @@ public class MarketExecutor implements CommandExecutor  {
                 }
                 else if (menu_item_key.equals("UPDATE_PAGE")){
                     playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
-                    player.openInventory(generateMainMenu(playerName));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
                 }
                 else if (menu_item_key.equals("PAGE_LEFT")){
                     playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
-                    player.openInventory(generateMainMenu(playerName));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
                 }
                 else if (menu_item_key.equals("PAGE_RIGHT")){
                     playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
-                    player.openInventory(generateMainMenu(playerName));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                }
+                else if (menu_item_key.equals("CATEGORIES_MENU")){
+                    playerCurrentMenu.put(playerName, "CATEGORIES_MENU");
+                    playerCurrentItemFilter.put(playerName, null);
+                    player.openInventory(itemCategoriesProcessor.generateFiltersInventory());
                 }
             }
             else{
@@ -359,7 +402,7 @@ public class MarketExecutor implements CommandExecutor  {
 
                 if (storage.getItem(unique_key) == null){
                     player.sendMessage(ChatColor.AQUA + "Этот предмет уже продан!");
-                    player.openInventory(generateMainMenu(playerName));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
                     return;
                 }
 
@@ -433,7 +476,7 @@ public class MarketExecutor implements CommandExecutor  {
                 player.sendMessage(ChatColor.GREEN + "Вы успешно приобрели предмет за " + ChatColor.GOLD + price + "✪ !");
 
                 storage.removeItem(unique_key);
-                player.openInventory(generateMainMenu(playerName));
+                player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
             }
         }
         else if (currentMenu.equals("MY_SOLD_ITEMS")){
@@ -444,7 +487,7 @@ public class MarketExecutor implements CommandExecutor  {
             if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)){
                 menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                 if (menu_item_key.equals("MAIN_MENU")){
-                    player.openInventory(generateMainMenu(playerName));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
                     playerCurrentMenu.put(playerName, "MAIN_MENU");
                 }
             }
@@ -495,7 +538,26 @@ public class MarketExecutor implements CommandExecutor  {
 
 
         }
+        else if (currentMenu.equals("CATEGORIES_MENU")){
+            String menu_item_key = "";
 
+            PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+            if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)){
+                menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                if (menu_item_key.equals("MAIN_MENU")){
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                    playerCurrentMenu.put(playerName, "MAIN_MENU");
+                }
+                else if (menu_item_key.contains("FILTER:")){
+                    String filterName = menu_item_key.split(":")[1];
+                    playerCurrentPage.put(playerName, 0);
+                    playerCurrentItemFilter.put(playerName, filterName);
+                    playerCurrentMenu.put(playerName, "MAIN_MENU");
+
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                }
+            }
+        }
 
     }
 }

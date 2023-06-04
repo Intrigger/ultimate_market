@@ -1,6 +1,7 @@
 package org.intrigger.ultimate_market;
 
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
 import org.intrigger.ultimate_market.commands.MarketTabComplete;
@@ -13,12 +14,15 @@ public final class Ultimate_market extends JavaPlugin {
 
     public static Logger LOGGER;
 
+    public static Plugin plugin;
     MarketExecutor marketExecutor;
 
     @Override
     public void onEnable() {
         LOGGER = getLogger();
         LOGGER.info(ChatColor.DARK_PURPLE  + "Ultimate Market " + ChatColor.RESET + "plugin has been " + ChatColor.GREEN + "enabled!");
+
+        plugin = this;
 
         marketExecutor = new MarketExecutor(this);
 
@@ -31,6 +35,7 @@ public final class Ultimate_market extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        marketExecutor.closeDatabase();
         LOGGER.info(ChatColor.DARK_PURPLE  + "Ultimate Market " + ChatColor.RESET + "plugin has been " + ChatColor.RED + "disabled!");
     }
 }
