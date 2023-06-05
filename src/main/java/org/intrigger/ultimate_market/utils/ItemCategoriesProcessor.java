@@ -58,7 +58,7 @@ public class ItemCategoriesProcessor {
 
     public void generateItemCategoriesYML(String configFileName){
         String yml_str = "alchemistry:\n" +
-                " title: \"&2&lАЛХИМИЯ\"\n" +
+                " title: \"&2&lAlchemistry\"\n" +
                 " slot: 9\n" +
                 " material: \"GLOWSTONE_DUST\"\n" +
                 " items: \n" +
@@ -80,7 +80,7 @@ public class ItemCategoriesProcessor {
                 "  - 'SPIDER_EYE'\n" +
                 "  - 'SUGAR'\n" +
                 "armor:\n" +
-                " title: \"&2&lБРОНЯ\"\n" +
+                " title: \"&2&lArmor\"\n" +
                 " slot: 10\n" +
                 " material: \"NETHERITE_CHESTPLATE\"\n" +
                 " items: \n" +
@@ -114,7 +114,7 @@ public class ItemCategoriesProcessor {
                 "  - 'NETHERITE_LEGGINGS'\n" +
                 "  - 'TURTLE_HELMET'\n" +
                 "building:\n" +
-                " title: \"&2&lСТРОИТЕЛЬНЫЕ БЛОКИ\"\n" +
+                " title: \"&2&lBuilding Blocks\"\n" +
                 " slot: 11\n" +
                 " material: \"STONE_BRICKS\"\n" +
                 " items: \n" +
@@ -449,7 +449,7 @@ public class ItemCategoriesProcessor {
                 "  - 'YELLOW_STAINED_GLASS_PANE'\n" +
                 "  - 'YELLOW_TERRACOTTA'\n" +
                 "decorations:\n" +
-                " title: \"&2&lДЕКОРАТИВНЫЕ БЛОКИ\"\n" +
+                " title: \"&2&lDecorative Blocks\"\n" +
                 " slot: 12\n" +
                 " material: \"PAINTING\"\n" +
                 " items: \n" +
@@ -874,7 +874,7 @@ public class ItemCategoriesProcessor {
                 "  - 'YELLOW_WOOL'\n" +
                 "  - 'ZOMBIE_HEAD'\n" +
                 "different:\n" +
-                " title: \"&2&lРАЗНОЕ\"\n" +
+                " title: \"&2&lDifferent\"\n" +
                 " slot: 13\n" +
                 " material: \"MUSIC_DISC_13\"\n" +
                 " items: \n" +
@@ -966,7 +966,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WHITE_DYE'\n" +
                 "  - 'YELLOW_DYE'\n" +
                 "enchanting:\n" +
-                " title: \"&2&lЧАРОВАНИЕ\"\n" +
+                " title: \"&2&lEnchanting\"\n" +
                 " slot: 14\n" +
                 " material: \"ENCHANTED_BOOK\"\n" +
                 " items: \n" +
@@ -981,7 +981,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WRITABLE_BOOK'\n" +
                 "  - 'WRITTEN_BOOK'\n" +
                 "food:\n" +
-                " title: \"&2&lЕДА\"\n" +
+                " title: \"&2&lFood\"\n" +
                 " slot: 15\n" +
                 " material: \"COOKED_PORKCHOP\"\n" +
                 " items: \n" +
@@ -1031,7 +1031,7 @@ public class ItemCategoriesProcessor {
                 "  - 'TROPICAL_FISH'\n" +
                 "  - 'WHEAT'\n" +
                 "fuel:\n" +
-                " title: \"&2&lТОПЛИВО\"\n" +
+                " title: \"&2&lFuel\"\n" +
                 " slot: 16\n" +
                 " material: \"COAL\"\n" +
                 " items: \n" +
@@ -1040,7 +1040,7 @@ public class ItemCategoriesProcessor {
                 "  - 'COAL'\n" +
                 "  - 'COAL_BLOCK'\n" +
                 "jewel:\n" +
-                " title: \"&2&lДРАГОЦЕННОСТИ\"\n" +
+                " title: \"&2&lJewelry\"\n" +
                 " slot: 17\n" +
                 " material: \"DIAMOND\"\n" +
                 " items: \n" +
@@ -1110,7 +1110,7 @@ public class ItemCategoriesProcessor {
                 "  - 'YELLOW_SHULKER_BOX'\n" +
                 "  - 'ZOMBIE_HEAD'\n" +
                 "loot:\n" +
-                " title: \"&2&lЛУТ С МОБОВ\"\n" +
+                " title: \"&2&lLoot from mobs\"\n" +
                 " slot: 18\n" +
                 " material: \"FEATHER\"\n" +
                 " items: \n" +
@@ -1150,7 +1150,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WITHER_SKELETON_SKULL'\n" +
                 "  - 'ZOMBIE_HEAD'\n" +
                 "mechanisms:\n" +
-                " title: \"&2&lМЕХАНИЗМЫ\"\n" +
+                " title: \"&2&lMechanisms\"\n" +
                 " slot: 19\n" +
                 " material: \"TNT\"\n" +
                 " items: \n" +
@@ -1223,7 +1223,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WARPED_PRESSURE_PLATE'\n" +
                 "  - 'WARPED_TRAPDOOR'\n" +
                 "ores:\n" +
-                " title: \"&2&lРУДЫ\"\n" +
+                " title: \"&2&lOres\"\n" +
                 " slot: 20\n" +
                 " material: \"GOLD_ORE\"\n" +
                 " items:\n" +
@@ -1238,7 +1238,7 @@ public class ItemCategoriesProcessor {
                 "  - 'NETHER_QUARTZ_ORE'\n" +
                 "  - 'REDSTONE_ORE'\n" +
                 "plants:\n" +
-                " title: \"&2&lРАСТЕНИЯ\"\n" +
+                " title: \"&2&lPlants & Organics\"\n" +
                 " slot: 21\n" +
                 " material: \"WHEAT_SEEDS\"\n" +
                 " items: \n" +
@@ -1315,7 +1315,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WHITE_TULIP'\n" +
                 "  - 'WITHER_ROSE'\n" +
                 "potions:\n" +
-                " title: \"&2&lЗЕЛЬЯ\"\n" +
+                " title: \"&2&lPotions\"\n" +
                 " slot: 22\n" +
                 " material: \"POTION\"\n" +
                 " items: \n" +
@@ -1323,7 +1323,7 @@ public class ItemCategoriesProcessor {
                 "  - 'POTION'\n" +
                 "  - 'SPLASH_POTION'\n" +
                 "spawn_egg:\n" +
-                " title: \"&2&lЯЙЦА ПРИЗЫВА\"\n" +
+                " title: \"&2&lSpawn Eggs\"\n" +
                 " slot: 23\n" +
                 " material: \"CREEPER_SPAWN_EGG\"\n" +
                 " items: \n" +
@@ -1391,7 +1391,7 @@ public class ItemCategoriesProcessor {
                 "  - 'ZOMBIE_VILLAGER_SPAWN_EGG'\n" +
                 "  - 'ZOMBIFIED_PIGLIN_SPAWN_EGG'\n" +
                 "tools:\n" +
-                " title: \"&2&lИНСТРУМЕНТЫ\"\n" +
+                " title: \"&2&lTools\"\n" +
                 " slot: 24\n" +
                 " material: \"DIAMOND_PICKAXE\"\n" +
                 " items: \n" +
@@ -1429,7 +1429,7 @@ public class ItemCategoriesProcessor {
                 "  - 'WOODEN_PICKAXE'\n" +
                 "  - 'WOODEN_SHOVEL'\n" +
                 "transport:\n" +
-                " title: \"&2&lТРАНСПОРТ\"\n" +
+                " title: \"&2&lTransport\"\n" +
                 " slot: 25\n" +
                 " material: \"OAK_BOAT\"\n" +
                 " items: \n" +
@@ -1443,7 +1443,7 @@ public class ItemCategoriesProcessor {
                 "  - 'SADDLE'\n" +
                 "  - 'SPRUCE_BOAT'\n" +
                 "weapon:\n" +
-                " title: \"&2&lОРУЖИЕ\"\n" +
+                " title: \"&2&lWeapon\"\n" +
                 " slot: 26\n" +
                 " material: \"DIAMOND_SWORD\"\n" +
                 " items: \n" +

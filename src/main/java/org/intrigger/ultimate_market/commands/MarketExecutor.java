@@ -1,7 +1,5 @@
 package org.intrigger.ultimate_market.commands;
 
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.TranslatableComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -9,11 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,24 +16,16 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.checkerframework.checker.units.qual.A;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.utils.*;
 import org.jetbrains.annotations.NotNull;
 
-import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
-import net.milkbowl.vault.permission.Permission;
 
 
 import java.io.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
-import static org.bukkit.Bukkit.getConsoleSender;
 import static org.bukkit.Bukkit.getServer;
 import static org.intrigger.ultimate_market.Ultimate_market.LOGGER;
 
@@ -61,7 +47,7 @@ public class MarketExecutor implements CommandExecutor  {
 
     public Map<String, Boolean> isMarketMenuOpen;
 
-    public MenuTitles menuTitles;
+    public LocalizedStrings localizedStrings;
 
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
@@ -72,7 +58,7 @@ public class MarketExecutor implements CommandExecutor  {
         itemCategoriesProcessor = new ItemCategoriesProcessor("plugins/Ultimate Market/item_categories.yml");
         playerCurrentItemFilter = new HashMap<>();
         isMarketMenuOpen = new HashMap<>();
-        menuTitles = new MenuTitles();
+        localizedStrings = new LocalizedStrings();
     }
 
     public void closeDatabase(){
@@ -85,7 +71,7 @@ public class MarketExecutor implements CommandExecutor  {
 
     public Inventory generateMainMenu(String playerName, String filter){
 
-        String mainMenuTitle = menuTitles.mainMenuTitle;
+        String mainMenuTitle = localizedStrings.mainMenuTitle;
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, mainMenuTitle);
 
@@ -94,9 +80,8 @@ public class MarketExecutor implements CommandExecutor  {
          */
         ItemStack mySlots = new ItemStack(Material.CHEST);
         ItemMeta mySlotsMeta = mySlots.getItemMeta();
-        mySlotsMeta.setDisplayName(ChatColor.GOLD + "Мой Аукцион");
-        List<String> lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы увидеть",
-                ChatColor.GREEN + "свои предметы на продаже.");
+        mySlotsMeta.setDisplayName(localizedStrings.myMarketButtonTitle);
+        List<String> lore = localizedStrings.myMarketButtonLore;
         mySlotsMeta.setLore(lore);
 
         PersistentDataContainer pdc = mySlotsMeta.getPersistentDataContainer();
@@ -110,9 +95,8 @@ public class MarketExecutor implements CommandExecutor  {
          */
         ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
         ItemMeta updatePageMeta = updatePage.getItemMeta();
-        updatePageMeta.setDisplayName(ChatColor.GOLD + "Обновить страницу");
-        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы обновить",
-                             ChatColor.GREEN + "текущую страницу");
+        updatePageMeta.setDisplayName(localizedStrings.updatePageButtonTitle);
+        lore = localizedStrings.updatePageButtonLore;
         updatePageMeta.setLore(lore);
 
         pdc = updatePageMeta.getPersistentDataContainer();
@@ -126,9 +110,8 @@ public class MarketExecutor implements CommandExecutor  {
         //
         ItemStack leftPage = new ItemStack(Material.PAPER);
         ItemMeta leftPageMeta = leftPage.getItemMeta();
-        leftPageMeta.setDisplayName(ChatColor.GOLD + "Предыдущая страница");
-        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы попасть",
-                ChatColor.GREEN + "на страницу назад");
+        leftPageMeta.setDisplayName(localizedStrings.previousPageButtonTitle);
+        lore = localizedStrings.previousPageButtonLore;
         leftPageMeta.setLore(lore);
 
         pdc = leftPageMeta.getPersistentDataContainer();
@@ -142,9 +125,8 @@ public class MarketExecutor implements CommandExecutor  {
         //
         ItemStack rightPage = new ItemStack(Material.PAPER);
         ItemMeta rightPageMeta = rightPage.getItemMeta();
-        rightPageMeta.setDisplayName(ChatColor.GOLD + "Следующая страница");
-        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы попасть",
-                ChatColor.GREEN + "на страницу вперед");
+        rightPageMeta.setDisplayName(localizedStrings.nextPageButtonTitle);
+        lore = localizedStrings.nextPageButtonLore;
         rightPageMeta.setLore(lore);
 
         pdc = rightPageMeta.getPersistentDataContainer();
@@ -158,9 +140,8 @@ public class MarketExecutor implements CommandExecutor  {
         //
         ItemStack categoriesPage = new ItemStack(Material.FEATHER);
         ItemMeta categoriesPageMeta = categoriesPage.getItemMeta();
-        categoriesPageMeta.setDisplayName(ChatColor.GOLD + "Категории предметом");
-        lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы выбрать",
-                ChatColor.GREEN + "категорию предметов");
+        categoriesPageMeta.setDisplayName(localizedStrings.itemCategoriesButtonTitle);
+        lore = localizedStrings.itemCategoriesButtonLore;
         categoriesPageMeta.setLore(lore);
 
         pdc = categoriesPageMeta.getPersistentDataContainer();
@@ -195,8 +176,8 @@ public class MarketExecutor implements CommandExecutor  {
                 String owner = currentItemStackNotation.owner;
                 long price = currentItemStackNotation.price;
                 ArrayList<String> newLore = new ArrayList<>();
-                newLore.add(ChatColor.BLUE + "Продавец: " + ChatColor.LIGHT_PURPLE + owner);
-                newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
+                newLore.add(localizedStrings.seller + owner);
+                newLore.add(localizedStrings.price + price + localizedStrings.currency);
 
                 ItemMeta currentItemMeta = currentItemStack.getItemMeta();
                 List<String> currentLore = currentItemStack.getLore();
@@ -213,23 +194,20 @@ public class MarketExecutor implements CommandExecutor  {
 
         menus.put("MAIN_MENU", inventory);
 
-        LOGGER.info(ChatColor.GREEN + "Generating Main Menu Time Elapsed " + (System.currentTimeMillis() - now) + " ms");
-
         return inventory;
     }
 
     public Inventory generateFiltersInventory(){
 
-        String inventoryName = menuTitles.itemCategoriesTitle;
+        String inventoryName = localizedStrings.itemCategoriesTitle;
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
         ItemMeta mySlotsMeta = homeItem.getItemMeta();
-        mySlotsMeta.setDisplayName(ChatColor.GOLD + "Аукцион");
-        List<String> lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы вернуться",
-                ChatColor.GREEN + "в главное меню");
+        mySlotsMeta.setDisplayName(localizedStrings.backToMainMenuButtonTitle);
+        List<String> lore = localizedStrings.backToMainMenuButtonLore;
         mySlotsMeta.setLore(lore);
         homeItem.setItemMeta(mySlotsMeta);
         ItemMeta homeItemMeta = homeItem.getItemMeta();
@@ -262,7 +240,7 @@ public class MarketExecutor implements CommandExecutor  {
     }
 
     public Inventory generateMySoldItemsMenu(Player player){
-        String inventoryName = menuTitles.mySoldItemsTitle;
+        String inventoryName = localizedStrings.mySoldItemsTitle;
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
@@ -271,9 +249,8 @@ public class MarketExecutor implements CommandExecutor  {
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
         ItemMeta mySlotsMeta = homeItem.getItemMeta();
-        mySlotsMeta.setDisplayName(ChatColor.GOLD + "Аукцион");
-        List<String> lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы вернуться",
-                ChatColor.GREEN + "в главное меню");
+        mySlotsMeta.setDisplayName(localizedStrings.backToMainMenuButtonTitle);
+        List<String> lore = localizedStrings.backToMainMenuButtonLore;
         mySlotsMeta.setLore(lore);
         homeItem.setItemMeta(mySlotsMeta);
         ItemMeta homeItemMeta = homeItem.getItemMeta();
@@ -297,18 +274,18 @@ public class MarketExecutor implements CommandExecutor  {
                 List<String> currentLore = currentItemStack.getLore();
 
                 if (currentLore == null){
-                    newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
-                    newLore.add(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)");
+                    newLore.add(localizedStrings.price + ChatColor.GOLD + price + localizedStrings.currency);
+                    newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
                 }
                 else{
-                    if (!currentLore.contains(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪")){
-                        newLore.add(ChatColor.BLUE + "Цена: " + ChatColor.GOLD + price + " ✪");
+                    if (!currentLore.contains(localizedStrings.price + ChatColor.GOLD + price + localizedStrings.currency)){
+                        newLore.add(localizedStrings.price + ChatColor.GOLD + price + localizedStrings.currency);
                     }
 
                     newLore.addAll(currentLore);
 
-                    if (!currentLore.contains(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)")){
-                        newLore.add(ChatColor.GREEN + "" + ChatColor.ITALIC + "(Нажми, чтобы снять с продажи)");
+                    if (!new HashSet<>(currentLore).containsAll(localizedStrings.pressToWithdrawFromSaleLore)){
+                        newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
                     }
                 }
 

@@ -29,7 +29,7 @@ public final class Ultimate_market extends JavaPlugin {
         Objects.requireNonNull(getCommand("ah")).setExecutor(marketExecutor);
         Objects.requireNonNull(getCommand("ah")).setTabCompleter(new MarketTabComplete());
 
-        new ClickHandler(this, LOGGER, marketExecutor);
+        new ClickHandler(this, marketExecutor);
 
     }
 
