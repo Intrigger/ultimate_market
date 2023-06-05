@@ -56,49 +56,6 @@ public class ItemCategoriesProcessor {
         }
     }
 
-    public Inventory generateFiltersInventory(){
-
-        String inventoryName = "Ultimate Market Menu";
-        int inventorySize = 54;
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
-
-        ItemStack homeItem = new ItemStack(Material.CHEST);
-
-        ItemMeta mySlotsMeta = homeItem.getItemMeta();
-        mySlotsMeta.setDisplayName(ChatColor.GOLD + "Аукцион");
-        List<String> lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы вернуться",
-                ChatColor.GREEN + "в главное меню");
-        mySlotsMeta.setLore(lore);
-        homeItem.setItemMeta(mySlotsMeta);
-        ItemMeta homeItemMeta = homeItem.getItemMeta();
-
-        PersistentDataContainer pdc = homeItemMeta.getPersistentDataContainer();
-        NamespacedKey namespacedKey = new NamespacedKey(Ultimate_market.plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
-
-        homeItem.setItemMeta(homeItemMeta);
-        inventory.setItem(0, homeItem);
-
-        for (Map.Entry<String, ItemFilterNotation> entry: filterNotations.entrySet()){
-            ItemFilterNotation filterNotation = entry.getValue();
-            String filterKey = filterNotation.title;
-            int slot = filterNotation.slot;
-            ItemStack currentItem = new ItemStack(filterNotation.material);
-
-            ItemMeta newItemMeta = currentItem.getItemMeta();
-            newItemMeta.setDisplayName(filterKey);
-            newItemMeta.setLore(filterNotation.lore);
-
-            pdc = newItemMeta.getPersistentDataContainer();
-            pdc.set(namespacedKey, PersistentDataType.STRING, "FILTER:" + filterNotation.name);
-
-            currentItem.setItemMeta(newItemMeta);
-            inventory.setItem(slot, currentItem);
-        }
-
-        return inventory;
-    }
-
     public void generateItemCategoriesYML(String configFileName){
         String yml_str = "alchemistry:\n" +
                 " title: \"&2&lАЛХИМИЯ\"\n" +

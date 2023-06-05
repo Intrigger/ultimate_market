@@ -10,12 +10,16 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
+import org.intrigger.ultimate_market.utils.MenuTitles;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -39,7 +43,9 @@ public class ClickHandler implements Listener {
         if (!(event.getView().title() instanceof TextComponent)) return;
 
         String inventoryName = ((TextComponent) event.getView().title()).content();
-        if (!inventoryName.equals("Ultimate Market Menu")) return;
+        if (!executor.menuTitles.titles.contains(inventoryName)) return;
+
+        String playerName = event.getWhoClicked().getName();
 
         event.setCancelled(true);
 
@@ -47,7 +53,7 @@ public class ClickHandler implements Listener {
 
         if (rawSlot >= 0 && rawSlot <= 53){
             if (event.getCurrentItem() == null) return;
-            executor.onMenuItemClick(Objects.requireNonNull(Bukkit.getPlayer(event.getWhoClicked().getName())), event.getCurrentItem());
+            executor.onMenuItemClick(Objects.requireNonNull(Bukkit.getPlayer(playerName)), event.getCurrentItem());
         }
     }
 }

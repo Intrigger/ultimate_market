@@ -11,6 +11,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -20,10 +23,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.checkerframework.checker.units.qual.A;
-import org.intrigger.ultimate_market.utils.ItemCategoriesProcessor;
-import org.intrigger.ultimate_market.utils.ItemStackNotation;
-import org.intrigger.ultimate_market.utils.ItemStorage;
-import org.intrigger.ultimate_market.utils.Pair;
+import org.intrigger.ultimate_market.Ultimate_market;
+import org.intrigger.ultimate_market.utils.*;
 import org.jetbrains.annotations.NotNull;
 
 import net.milkbowl.vault.chat.Chat;
@@ -57,6 +58,11 @@ public class MarketExecutor implements CommandExecutor  {
     private static Map<String, Integer> playerCurrentPage;
     private static Map<String, String> playerCurrentItemFilter;
     public static ItemCategoriesProcessor itemCategoriesProcessor;
+
+    public Map<String, Boolean> isMarketMenuOpen;
+
+    public MenuTitles menuTitles;
+
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
         playerCurrentMenu = new HashMap<>();
@@ -65,6 +71,8 @@ public class MarketExecutor implements CommandExecutor  {
         playerCurrentPage = new HashMap<>();
         itemCategoriesProcessor = new ItemCategoriesProcessor("plugins/Ultimate Market/item_categories.yml");
         playerCurrentItemFilter = new HashMap<>();
+        isMarketMenuOpen = new HashMap<>();
+        menuTitles = new MenuTitles();
     }
 
     public void closeDatabase(){
@@ -76,9 +84,10 @@ public class MarketExecutor implements CommandExecutor  {
     }
 
     public Inventory generateMainMenu(String playerName, String filter){
-        String inventoryName = "Ultimate Market Menu";
+
+        String mainMenuTitle = menuTitles.mainMenuTitle;
         int inventorySize = 54;
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
+        Inventory inventory = Bukkit.createInventory(null, inventorySize, mainMenuTitle);
 
         /*
             My Auction Slots Page Button
@@ -209,8 +218,51 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+    public Inventory generateFiltersInventory(){
+
+        String inventoryName = menuTitles.itemCategoriesTitle;
+        int inventorySize = 54;
+        Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
+
+        ItemStack homeItem = new ItemStack(Material.CHEST);
+
+        ItemMeta mySlotsMeta = homeItem.getItemMeta();
+        mySlotsMeta.setDisplayName(ChatColor.GOLD + "Аукцион");
+        List<String> lore = Arrays.asList(ChatColor.GREEN + "Нажми, чтобы вернуться",
+                ChatColor.GREEN + "в главное меню");
+        mySlotsMeta.setLore(lore);
+        homeItem.setItemMeta(mySlotsMeta);
+        ItemMeta homeItemMeta = homeItem.getItemMeta();
+
+        PersistentDataContainer pdc = homeItemMeta.getPersistentDataContainer();
+        NamespacedKey namespacedKey = new NamespacedKey(Ultimate_market.plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
+
+        homeItem.setItemMeta(homeItemMeta);
+        inventory.setItem(0, homeItem);
+
+        for (Map.Entry<String, ItemFilterNotation> entry: itemCategoriesProcessor.filterNotations.entrySet()){
+            ItemFilterNotation filterNotation = entry.getValue();
+            String filterKey = filterNotation.title;
+            int slot = filterNotation.slot;
+            ItemStack currentItem = new ItemStack(filterNotation.material);
+
+            ItemMeta newItemMeta = currentItem.getItemMeta();
+            newItemMeta.setDisplayName(filterKey);
+            newItemMeta.setLore(filterNotation.lore);
+
+            pdc = newItemMeta.getPersistentDataContainer();
+            pdc.set(namespacedKey, PersistentDataType.STRING, "FILTER:" + filterNotation.name);
+
+            currentItem.setItemMeta(newItemMeta);
+            inventory.setItem(slot, currentItem);
+        }
+
+        return inventory;
+    }
+
     public Inventory generateMySoldItemsMenu(Player player){
-        String inventoryName = "Ultimate Market Menu";
+        String inventoryName = menuTitles.mySoldItemsTitle;
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
@@ -282,11 +334,13 @@ public class MarketExecutor implements CommandExecutor  {
         }
 
         Player player = (Player) commandSender;
+        String playerName = player.getName();
 
         if (strings.length == 0){
             playerCurrentMenu.put(player.getName(), "MAIN_MENU");
             playerCurrentPage.put(player.getName(), 0);
             playerCurrentItemFilter.put(player.getName(), null);
+            isMarketMenuOpen.put(playerName, true);
             player.openInventory(generateMainMenu(player.getName(), null));
         } else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
@@ -385,7 +439,7 @@ public class MarketExecutor implements CommandExecutor  {
                 else if (menu_item_key.equals("CATEGORIES_MENU")){
                     playerCurrentMenu.put(playerName, "CATEGORIES_MENU");
                     playerCurrentItemFilter.put(playerName, null);
-                    player.openInventory(itemCategoriesProcessor.generateFiltersInventory());
+                    player.openInventory(generateFiltersInventory());
                 }
             }
             else{
@@ -457,6 +511,7 @@ public class MarketExecutor implements CommandExecutor  {
 
                 if (!hasEmptySlot){
                     player.sendMessage(ChatColor.RED + "Освободите место в инвентаре, чтобы снять предмет с продажи!");
+                    return;
                 }
 
                 rsp.getProvider().withdrawPlayer(playerName, price);
@@ -473,7 +528,7 @@ public class MarketExecutor implements CommandExecutor  {
                     }
                     Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
                 }
-                player.sendMessage(ChatColor.GREEN + "Вы успешно приобрели предмет за " + ChatColor.GOLD + price + "✪ !");
+                player.sendMessage(ChatColor.GREEN + "Вы успешно приобрели " + ChatColor.AQUA + item.getI18NDisplayName() + ChatColor.GRAY + " (x" + item.getAmount() + ")" + ChatColor.GREEN + " за " + ChatColor.GOLD + price + "✪ !");
 
                 storage.removeItem(unique_key);
                 player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
