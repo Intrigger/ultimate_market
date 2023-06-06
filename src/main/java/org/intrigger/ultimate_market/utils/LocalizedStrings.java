@@ -51,6 +51,7 @@ public class LocalizedStrings {
     public String youHaveWithdrawnItem;
     public String sortingTypeButtonTitle;
     public List<String> sortingTypeButtonLore;
+    public String itemSoldLimitReached;
     public ArrayList<String> titles;
     public LocalizedStrings(){
 
@@ -117,6 +118,8 @@ public class LocalizedStrings {
 
             config.set("strings.sorting_type_button.title", "&6Sorting Type");
             config.set("strings.sorting_type_button.lore", Arrays.asList("&aNew First", "&aOld First","&aCheap First", "&aExpensive First"));
+
+            config.set("strings.items_sold_limit_reached", "&cYou have reached the limit of items being sold at the same time!");
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -214,6 +217,8 @@ public class LocalizedStrings {
         sortingTypeButtonTitle = config.getString("strings.sorting_type_button.title").replaceAll("&", "§");
         sortingTypeButtonLore = config.getStringList("strings.sorting_type_button.lore");
         sortingTypeButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        itemSoldLimitReached = config.getString("strings.items_sold_limit_reached").replaceAll("&", "§");
 
 
         titles = new ArrayList<>();

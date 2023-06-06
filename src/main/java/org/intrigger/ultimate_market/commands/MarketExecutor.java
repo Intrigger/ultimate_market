@@ -17,6 +17,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.checkerframework.checker.units.qual.A;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.utils.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +45,7 @@ public class MarketExecutor implements CommandExecutor  {
     public LocalizedStrings localizedStrings;
 
     private Map<String, String> playerCurrentSortingType;
+    private GroupsPermissions groupsPermissions;
 
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
@@ -56,6 +58,7 @@ public class MarketExecutor implements CommandExecutor  {
         isMarketMenuOpen = new HashMap<>();
         localizedStrings = new LocalizedStrings();
         playerCurrentSortingType = new HashMap<>();
+        groupsPermissions = new GroupsPermissions();
     }
 
     public void closeDatabase(){
@@ -384,6 +387,24 @@ public class MarketExecutor implements CommandExecutor  {
                 return true;
             }
 
+            String playerGroup = "default";
+
+            ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
+
+            for (int i = groups.size() - 1; i >= 0; i--){
+                String group = groups.get(i);
+                if (player.hasPermission("group." + group)){
+                    playerGroup = group;
+                    break;
+                }
+            }
+
+
+            if (storage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
+                player.sendMessage(localizedStrings.itemSoldLimitReached);
+                return true;
+            }
+
             long price = Math.round(priceDouble);
 
             String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
@@ -590,8 +611,24 @@ public class MarketExecutor implements CommandExecutor  {
                             message = message.replace("{CURRENCY}", localizedStrings.currency);
                             player.sendMessage(message);
                         }
-
                     }
+
+                    String message = "";
+                    if (newItem.getItemMeta().getDisplayName().isEmpty()) {
+                        message = localizedStrings.youBoughtItemNotification;
+                        message = message.replace("{ITEM}", newItem.getI18NDisplayName());
+                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                        message = message.replace("{PRICE}", String.valueOf(price));
+                        message = message.replace("{CURRENCY}", localizedStrings.currency);
+                    } else {
+                        message = localizedStrings.youBoughtItemNotification;
+                        message = message.replace("{ITEM}", newItem.getItemMeta().getDisplayName());
+                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                        message = message.replace("{PRICE}", String.valueOf(price));
+                        message = message.replace("{CURRENCY}", localizedStrings.currency);
+                    }
+
+                    player.sendMessage(message);
 
                     storage.removeItem(unique_key);
                     player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));

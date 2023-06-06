@@ -104,6 +104,23 @@ public class ItemStorage {
         return resultNotation;
     }
 
+    public int playerItemsSoldNow(String playerName){
+        String sql = "SELECT COUNT() FROM items WHERE owner = \"" + playerName + "\";";
+        try{
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql);
+
+            ResultSet result = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            result.next();
+            return result.getInt(1);
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
     public ArrayList<ItemStackNotation> getAllKeys(int page, String sortingType){
 
