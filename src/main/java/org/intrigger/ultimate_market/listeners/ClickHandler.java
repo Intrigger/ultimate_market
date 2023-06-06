@@ -1,5 +1,6 @@
 package org.intrigger.ultimate_market.listeners;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -24,8 +25,18 @@ public class ClickHandler implements Listener {
 
         if (!(event.getView().title() instanceof TextComponent)) return;
 
-        String inventoryName = ((TextComponent) event.getView().title()).content();
-        if (!executor.localizedStrings.titles.contains(inventoryName)) return;
+        String inventoryName = event.getView().getTitle();
+
+        boolean contains = false;
+
+        for (String s: executor.localizedStrings.titles){
+            if (s.equals(inventoryName)){
+                contains = true;
+                break;
+            }
+        }
+
+        if (!contains) return;
 
         String playerName = event.getWhoClicked().getName();
 

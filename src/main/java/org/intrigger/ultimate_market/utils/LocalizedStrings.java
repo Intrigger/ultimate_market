@@ -37,39 +37,84 @@ public class LocalizedStrings {
     public String backToMainMenuButtonTitle;
     public List<String> backToMainMenuButtonLore;
     public List<String> pressToWithdrawFromSaleLore;
-
+    public List<String> wrongCommandUsage;
+    public List<String> specifyThePrice;
+    public List<String> theItemToBeSoldMustBeHeldInTheHand;
+    public List<String> commandCanBeUsedOnlyByPlayer;
+    public List<String> youSpecifiedWrongPrice;
+    public List<String> negativePrice;
+    public List<String> successfulPuttingUp;
+    public List<String> zeroPriceNotice;
+    public String itemAlreadySold;
+    public String cannotByYourOwnItem;
+    public String notEnoughMoney;
+    public String freeUpInventorySpace;
+    public String playerBoughtItemNotification;
+    public String youBoughtItemNotification;
+    public String youHaveWithdrawnedItem;
     public ArrayList<String> titles;
     public LocalizedStrings(){
 
         if (!new File("plugins/Ultimate Market/localized_strings.yml").exists()){
             YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/Ultimate Market/localized_strings.yml"));
-            config.set("titles.main_menu",   "Main Menu"  );
-            config.set("titles.my_sold_items",   "My Sold Items"  );
-            config.set("titles.item_categories",   "Item Categories"  );
+            config.set("titles.main_menu",   "&2&lUltimate &4&lMarket"  );
+            config.set("titles.my_sold_items",   "&2&lMy Market"  );
+            config.set("titles.item_categories",   "&2&lItem Categories"  );
             
-            config.set("strings.my_market_button.title",   "My Market"  );
-            config.set("strings.my_market_button.lore", Arrays.asList(  "Press to see"  ,   "your sold items"  ));
+            config.set("strings.my_market_button.title",   "&6My Market"  );
+            config.set("strings.my_market_button.lore", Arrays.asList(  "&aPress to see"  ,   "&ayour sold items"  ));
 
-            config.set("strings.update_button.title",   "Update Page"  );
-            config.set("strings.update_button.lore", Arrays.asList(  "Press to update"  ,   "current page"  ));
+            config.set("strings.update_button.title",   "&6Update Page"  );
+            config.set("strings.update_button.lore", Arrays.asList(  "&aPress to update"  ,   "&acurrent page"  ));
 
-            config.set("strings.previous_page_button.title",   "Previous Page"  );
-            config.set("strings.previous_page_button.lore", Arrays.asList(  "Press to go"  ,   "one page back"  ));
+            config.set("strings.previous_page_button.title",   "&6Previous Page"  );
+            config.set("strings.previous_page_button.lore", Arrays.asList(  "&aPress to go"  ,   "&aone page back"  ));
 
-            config.set("strings.next_page_button.title",   "Next Page"  );
-            config.set("strings.next_page_button.lore", Arrays.asList(  "Press to go"  ,   "one page forward"  ));
+            config.set("strings.next_page_button.title",   "&6Next Page"  );
+            config.set("strings.next_page_button.lore", Arrays.asList(  "&aPress to go"  ,   "&aone page forward"  ));
 
-            config.set("strings.item_categories_button.title",   "Item Categories"  );
-            config.set("strings.item_categories_button.lore", Arrays.asList(  "Press to open"  ,   "Item Categories menu"  ));
+            config.set("strings.item_categories_button.title",   "&6Item Categories"  );
+            config.set("strings.item_categories_button.lore", Arrays.asList(  "&aPress to open"  ,   "&aItem Categories menu"  ));
 
-            config.set("strings.seller",   "Seller: "  );
-            config.set("strings.price",   "Price: "  );
-            config.set("strings.currency_symbol",   "$"  );
+            config.set("strings.seller",   "&6Seller: &a"  );
+            config.set("strings.price",   "&6Price: &a"  );
+            config.set("strings.currency_symbol",   "&2$"  );
 
-            config.set("strings.back_to_main_menu_button.title",   "Back To Main Menu"  );
-            config.set("strings.back_to_main_menu_button.lore", Arrays.asList(  "Press to go"  ,   "back to Main Menu"  ));
+            config.set("strings.back_to_main_menu_button.title",   "&6Back To Main Menu"  );
+            config.set("strings.back_to_main_menu_button.lore", Arrays.asList(  "&aPress to go"  ,   "&aback to Main Menu"  ));
 
-            config.set("strings.press_to_withdraw_from_sale.lore", Arrays.asList(  "Press to withdraw"  ,   "from sale"  ));
+            config.set("strings.press_to_withdraw_from_sale.lore", Arrays.asList(  "&aPress to withdraw"  ,   "&afrom sale"  ));
+
+            config.set("strings.wrong_command_usage", Arrays.asList("&cWrong usage of command /ah (/market)",
+                                                                    "&cTry like this: /ah <sell | buy | bid> <price> <full | solo>",
+                                                                    "&7(hold the item you sold in your main hand)"));
+
+            config.set("strings.specify_the_price", Arrays.asList("&cSpecify the price!",
+                                                                  "&7e.g. /ah <sell | bid> 500"));
+
+            config.set("strings.the_item_to_be_sold_must_be_held_in_the_hand", Arrays.asList("&cThe item to be sold must be held in the hand!"));
+
+            config.set("strings.command_can_be_used_only_by_player", Arrays.asList("&cThis command can be used only by player!"));
+
+            config.set("strings.you_specified_wrong_price", Arrays.asList("&cYou specified wrong price!"));
+
+            config.set("strings.negative_price", Arrays.asList("&cYou specified negative price!"));
+
+            config.set("strings.successful_putting_up", Arrays.asList("&6You have successfully placed an item for sale"));
+
+            config.set("strings.zero_price_notice", Arrays.asList("&7Since you have entered a zero price, you will not receive money for the sale of this item!"));
+
+            config.set("strings.item_already_sold", "&4This item is already sold!");
+            config.set("strings.cannot_by_your_own_item", "&4Cannot buy your own item!");
+
+            config.set("strings.not_enough_money", "&4You have not enough money!");
+
+            config.set("strings.free_up_inventory_space", "&4Free up inventory space to get this item!");
+            config.set("strings.player_bought_item_notification", "&aPlayer &b{PLAYER} &abought &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
+
+            config.set("strings.you_bought_item_notification", "&aYou successfully bought &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
+
+            config.set("strings.you_have_withdrawn_item", "&aYou have withdrawn item from sale!");
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -82,42 +127,91 @@ public class LocalizedStrings {
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/Ultimate Market/localized_strings.yml"));
 
-        mainMenuTitle = config.getString("titles.main_menu");
-        mySoldItemsTitle = config.getString("titles.my_sold_items");
-        itemCategoriesTitle = config.getString("titles.item_categories");
+        mainMenuTitle = config.getString("titles.main_menu").replaceAll("&", "§");
 
-        myMarketButtonTitle = config.getString("strings.my_market_button.title");
+        mySoldItemsTitle = config.getString("titles.my_sold_items").replaceAll("&", "§");
+        itemCategoriesTitle = config.getString("titles.item_categories").replaceAll("&", "§");
+
+        myMarketButtonTitle = config.getString("strings.my_market_button.title").replaceAll("&", "§");
+        
         myMarketButtonLore = config.getStringList("strings.my_market_button.lore");
+        myMarketButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
-        updatePageButtonTitle = config.getString("strings.update_button.title");
+        updatePageButtonTitle = config.getString("strings.update_button.title").replaceAll("&", "§");
+        
         updatePageButtonLore = config.getStringList("strings.update_button.lore");
+        updatePageButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+        
 
-        previousPageButtonTitle = config.getString("strings.previous_page_button.title");
+        previousPageButtonTitle = config.getString("strings.previous_page_button.title").replaceAll("&", "§");
+        
         previousPageButtonLore = config.getStringList("strings.previous_page_button.lore");
+        previousPageButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
-        nextPageButtonTitle = config.getString("strings.next_page_button.title");
+        nextPageButtonTitle = config.getString("strings.next_page_button.title").replaceAll("&", "§");
+        
         nextPageButtonLore = config.getStringList("strings.next_page_button.lore");
+        nextPageButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
-        itemCategoriesButtonTitle = config.getString("strings.item_categories_button.title");
+        itemCategoriesButtonTitle = config.getString("strings.item_categories_button.title").replaceAll("&", "§");
+        
         itemCategoriesButtonLore = config.getStringList("strings.item_categories_button.lore");
+        itemCategoriesButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+        
 
-        seller = config.getString("strings.seller");
-        price = config.getString("strings.price");
-        currency = config.getString("strings.currency_symbol");
+        seller = config.getString("strings.seller").replaceAll("&", "§");
+        price = config.getString("strings.price").replaceAll("&", "§");
+        currency = config.getString("strings.currency_symbol").replaceAll("&", "§");
 
-        backToMainMenuButtonTitle = config.getString("strings.back_to_main_menu_button.title");
+        backToMainMenuButtonTitle = config.getString("strings.back_to_main_menu_button.title").replaceAll("&", "§");
+
         backToMainMenuButtonLore = config.getStringList("strings.back_to_main_menu_button.lore");
+        backToMainMenuButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
         pressToWithdrawFromSaleLore = config.getStringList("strings.press_to_withdraw_from_sale.lore");
+        pressToWithdrawFromSaleLore.replaceAll(s -> s.replaceAll("&", "§"));
+        
+        wrongCommandUsage = config.getStringList("strings.wrong_command_usage");
+        wrongCommandUsage.replaceAll(s -> s.replaceAll("&", "§"));
+
+        specifyThePrice = config.getStringList("strings.specify_the_price");
+        specifyThePrice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        theItemToBeSoldMustBeHeldInTheHand = config.getStringList("strings.the_item_to_be_sold_must_be_held_in_the_hand");
+        theItemToBeSoldMustBeHeldInTheHand.replaceAll(s -> s.replaceAll("&", "§"));
+
+        commandCanBeUsedOnlyByPlayer = config.getStringList("strings.command_can_be_used_only_by_player");
+        commandCanBeUsedOnlyByPlayer.replaceAll(s -> s.replaceAll("&", "§"));
+
+        youSpecifiedWrongPrice = config.getStringList("strings.you_specified_wrong_price");
+        youSpecifiedWrongPrice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        negativePrice = config.getStringList("strings.negative_price");
+        negativePrice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        successfulPuttingUp = config.getStringList("strings.successful_putting_up");
+        successfulPuttingUp.replaceAll(s -> s.replaceAll("&", "§"));
+
+        zeroPriceNotice = config.getStringList("strings.zero_price_notice");
+        zeroPriceNotice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        itemAlreadySold = config.getString("strings.item_already_sold").replaceAll("&", "§");
+
+        cannotByYourOwnItem = config.getString("strings.cannot_by_your_own_item").replaceAll("&", "§");
+
+        notEnoughMoney = config.getString("strings.not_enough_money").replaceAll("&", "§");
+
+        freeUpInventorySpace = config.getString("strings.free_up_inventory_space").replaceAll("&", "§");
+
+        playerBoughtItemNotification = config.getString("strings.player_bought_item_notification").replaceAll("&", "§");
+
+        youBoughtItemNotification = config.getString("strings.you_bought_item_notification").replaceAll("&", "§");
+
+        youHaveWithdrawnedItem = config.getString("strings.you_have_withdrawn_item").replaceAll("&", "§");
 
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
         titles.add(mainMenuTitle);
         titles.add(mySoldItemsTitle);
     }
-
-    public ArrayList<String> getTitles(){
-        return titles;
-    }
-
 }

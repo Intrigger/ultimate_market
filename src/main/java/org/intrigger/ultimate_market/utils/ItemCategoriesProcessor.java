@@ -50,14 +50,15 @@ public class ItemCategoriesProcessor {
         for (Map.Entry<String, ItemFilterNotation> notation: filterNotations.entrySet()){
             for (String f: notation.getValue().filters){
                 if (Material.getMaterial(f) == null) {
-                    System.out.println(ChatColor.RED + f + " is null!");
+                    System.out.println(ChatColor.RED + "Item Categories YML Configuration file error: wrong material " + f);
                 }
             }
         }
     }
 
     public void generateItemCategoriesYML(String configFileName){
-        String yml_str = "alchemistry:\n" +
+        String yml_str =
+                "alchemistry:\n" +
                 " title: \"&2&lAlchemistry\"\n" +
                 " slot: 9\n" +
                 " material: \"GLOWSTONE_DUST\"\n" +
@@ -920,6 +921,7 @@ public class ItemCategoriesProcessor {
                 "  - 'NETHER_PORTAL'\n" +
                 "  - 'ORANGE_DYE'\n" +
                 "  - 'PINK_DYE'\n" +
+                "  - 'PLAYER_HEAD'\n" +
                 "  - 'POPPED_CHORUS_FRUIT'\n" +
                 "  - 'POTTED_ACACIA_SAPLING'\n" +
                 "  - 'POTTED_ALLIUM'\n" +
@@ -1238,7 +1240,7 @@ public class ItemCategoriesProcessor {
                 "  - 'NETHER_QUARTZ_ORE'\n" +
                 "  - 'REDSTONE_ORE'\n" +
                 "plants:\n" +
-                " title: \"&2&lPlants & Organics\"\n" +
+                " title: \"&2&lPlants and Organics\"\n" +
                 " slot: 21\n" +
                 " material: \"WHEAT_SEEDS\"\n" +
                 " items: \n" +
