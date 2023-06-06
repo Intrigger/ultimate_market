@@ -105,9 +105,29 @@ public class ItemStorage {
     }
 
 
-    public ArrayList<ItemStackNotation> getAllKeysOrderByTime(int page){
+    public ArrayList<ItemStackNotation> getAllKeys(int page, String sortingType){
 
-        String sql = "SELECT * FROM items ORDER BY time DESC;";
+        String order_by_what = "TIME", asc_or_desc = "DESC";
+        switch (sortingType){
+            case "NEW_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "DESC";
+                break;
+            case "OLD_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "ASC";
+                break;
+            case "CHEAP_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "ASC";
+                break;
+            case "EXPENSIVE_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "DESC";
+                break;
+        }
+
+        String sql = "SELECT * FROM items ORDER BY " + order_by_what + " " + asc_or_desc + ";";
         ResultSet result;
         try {
             PreparedStatement statement;
@@ -133,7 +153,6 @@ public class ItemStorage {
                         )
                 );
             }
-
 
             return itemsToReturn;
 
@@ -215,7 +234,27 @@ public class ItemStorage {
         return 0;
     }
 
-    public ArrayList<ItemStackNotation> getAllItemsFiltered(ArrayList<String> filters, int page){
+    public ArrayList<ItemStackNotation> getAllItemsFiltered(ArrayList<String> filters, int page, String sortingType){
+        String order_by_what = "TIME", asc_or_desc = "DESC";
+        switch (sortingType){
+            case "NEW_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "DESC";
+                break;
+            case "OLD_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "ASC";
+                break;
+            case "CHEAP_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "ASC";
+                break;
+            case "EXPENSIVE_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "DESC";
+                break;
+        }
+
         String sql = "SELECT * FROM items WHERE ";
 
         for (int i = 0; i < filters.size() - 1; i++){
@@ -224,7 +263,7 @@ public class ItemStorage {
 
         sql += "material = " + "\"" + filters.get(filters.size() - 1) + "\"";
 
-        sql += "ORDER BY time DESC";
+        sql += "ORDER BY " + order_by_what + " " + asc_or_desc;
 
         try{
             PreparedStatement statement = conn.prepareStatement(sql);

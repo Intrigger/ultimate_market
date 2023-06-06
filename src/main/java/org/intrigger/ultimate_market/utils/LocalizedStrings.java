@@ -1,11 +1,8 @@
 package org.intrigger.ultimate_market.utils;
 
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +48,9 @@ public class LocalizedStrings {
     public String freeUpInventorySpace;
     public String playerBoughtItemNotification;
     public String youBoughtItemNotification;
-    public String youHaveWithdrawnedItem;
+    public String youHaveWithdrawnItem;
+    public String sortingTypeButtonTitle;
+    public List<String> sortingTypeButtonLore;
     public ArrayList<String> titles;
     public LocalizedStrings(){
 
@@ -115,6 +114,9 @@ public class LocalizedStrings {
             config.set("strings.you_bought_item_notification", "&aYou successfully bought &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
 
             config.set("strings.you_have_withdrawn_item", "&aYou have withdrawn item from sale!");
+
+            config.set("strings.sorting_type_button.title", "&6Sorting Type");
+            config.set("strings.sorting_type_button.lore", Arrays.asList("&aNew First", "&aOld First","&aCheap First", "&aExpensive First"));
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -207,7 +209,12 @@ public class LocalizedStrings {
 
         youBoughtItemNotification = config.getString("strings.you_bought_item_notification").replaceAll("&", "§");
 
-        youHaveWithdrawnedItem = config.getString("strings.you_have_withdrawn_item").replaceAll("&", "§");
+        youHaveWithdrawnItem = config.getString("strings.you_have_withdrawn_item").replaceAll("&", "§");
+
+        sortingTypeButtonTitle = config.getString("strings.sorting_type_button.title").replaceAll("&", "§");
+        sortingTypeButtonLore = config.getStringList("strings.sorting_type_button.lore");
+        sortingTypeButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+
 
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);

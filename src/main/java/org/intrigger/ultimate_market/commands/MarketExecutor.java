@@ -8,6 +8,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -41,6 +43,8 @@ public class MarketExecutor implements CommandExecutor  {
 
     public LocalizedStrings localizedStrings;
 
+    private Map<String, String> playerCurrentSortingType;
+
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
         playerCurrentMenu = new HashMap<>();
@@ -51,6 +55,7 @@ public class MarketExecutor implements CommandExecutor  {
         playerCurrentItemFilter = new HashMap<>();
         isMarketMenuOpen = new HashMap<>();
         localizedStrings = new LocalizedStrings();
+        playerCurrentSortingType = new HashMap<>();
     }
 
     public void closeDatabase(){
@@ -61,7 +66,7 @@ public class MarketExecutor implements CommandExecutor  {
         return (int) (1 + Math.floor((double)totalItemsNumber / 45.0));
     }
 
-    public Inventory generateMainMenu(String playerName, String filter){
+    public Inventory generateMainMenu(String playerName, String filter, String sortingType){
 
         String mainMenuTitle = localizedStrings.mainMenuTitle;
         int inventorySize = 54;
@@ -142,14 +147,45 @@ public class MarketExecutor implements CommandExecutor  {
         categoriesPage.setItemMeta(categoriesPageMeta);
         inventory.setItem(8, categoriesPage);
 
+        //
+        // SORTING BUTTON
+        //
+        ItemStack sortingButton = new ItemStack(Material.HOPPER);
+        ItemMeta sortingButtonMeta = sortingButton.getItemMeta();
+        sortingButtonMeta.setDisplayName(localizedStrings.sortingTypeButtonTitle);
+        lore = new ArrayList<>(localizedStrings.sortingTypeButtonLore);
+
+        switch (playerCurrentSortingType.get(playerName)){
+            case "NEW_FIRST":
+                lore.set(0, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(0));
+                break;
+            case "OLD_FIRST":
+                lore.set(1, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(1));
+                break;
+            case "CHEAP_FIRST":
+                lore.set(2, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(2));
+                break;
+            case "EXPENSIVE_FIRST":
+                lore.set(3, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(3));
+                break;
+        }
+
+        sortingButtonMeta.setLore(lore);
+
+        pdc = sortingButtonMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "SORTING_BUTTON");
+        sortingButton.setItemMeta(sortingButtonMeta);
+        inventory.setItem(7, sortingButton);
+
         /*
             Sorting items from 'items sold file' by time
          */
 
         ArrayList<ItemStackNotation> queryResult;
 
-        if (filter == null) queryResult = storage.getAllKeysOrderByTime(playerCurrentPage.get(playerName));
-        else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName));
+        if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
+        else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
 
         if (queryResult != null){
             int currentSlot = 9;
@@ -302,11 +338,12 @@ public class MarketExecutor implements CommandExecutor  {
         String playerName = player.getName();
 
         if (strings.length == 0){
-            playerCurrentMenu.put(player.getName(), "MAIN_MENU");
-            playerCurrentPage.put(player.getName(), 0);
+            playerCurrentMenu.put(playerName, "MAIN_MENU");
+            playerCurrentPage.put(playerName, 0);
+            playerCurrentSortingType.put(playerName, "NEW_FIRST");
             playerCurrentItemFilter.put(player.getName(), null);
             isMarketMenuOpen.put(playerName, true);
-            player.openInventory(generateMainMenu(player.getName(), null));
+            player.openInventory(generateMainMenu(player.getName(), null, playerCurrentSortingType.get(playerName)));
         } else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
                 for (String temp: localizedStrings.wrongCommandUsage){
@@ -377,7 +414,7 @@ public class MarketExecutor implements CommandExecutor  {
         return true;
     }
 
-    public void onMenuItemClick(Player player, ItemStack item){
+    public void onMenuItemClick(Player player, ItemStack item, ClickType clickEvent){
 
         String playerName = player.getName();
         String currentMenu = playerCurrentMenu.get(playerName);
@@ -385,9 +422,6 @@ public class MarketExecutor implements CommandExecutor  {
 
         switch (currentMenu) {
             case "MAIN_MENU": {
-
-
-
                 PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
                 if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
@@ -411,20 +445,58 @@ public class MarketExecutor implements CommandExecutor  {
                             break;
                         case "UPDATE_PAGE":
                             playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
-                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "PAGE_LEFT":
                             playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
-                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "PAGE_RIGHT":
                             playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
-                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "CATEGORIES_MENU":
                             playerCurrentMenu.put(playerName, "CATEGORIES_MENU");
                             playerCurrentItemFilter.put(playerName, null);
                             player.openInventory(generateFiltersInventory());
+                            break;
+                        case "SORTING_BUTTON":
+                            String newSortingType = "";
+                            if (clickEvent.isLeftClick()){
+                                switch (playerCurrentSortingType.get(playerName)){
+                                    case "NEW_FIRST":
+                                        newSortingType = "OLD_FIRST";
+                                        break;
+                                    case "OLD_FIRST":
+                                        newSortingType = "CHEAP_FIRST";
+                                        break;
+                                    case "CHEAP_FIRST":
+                                        newSortingType = "EXPENSIVE_FIRST";
+                                        break;
+                                    case "EXPENSIVE_FIRST":
+                                        newSortingType = "NEW_FIRST";
+                                        break;
+                                }
+                            }
+                            else if (clickEvent.isRightClick()){
+                                switch (playerCurrentSortingType.get(playerName)){
+                                    case "NEW_FIRST":
+                                        newSortingType = "EXPENSIVE_FIRST";
+                                        break;
+                                    case "OLD_FIRST":
+                                        newSortingType = "NEW_FIRST";
+                                        break;
+                                    case "CHEAP_FIRST":
+                                        newSortingType = "OLD_FIRST";
+                                        break;
+                                    case "EXPENSIVE_FIRST":
+                                        newSortingType = "CHEAP_FIRST";
+                                        break;
+                                }
+                            }
+
+                            playerCurrentSortingType.put(playerName, newSortingType);
+                            player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                     }
                 } else {
@@ -441,7 +513,7 @@ public class MarketExecutor implements CommandExecutor  {
 
                     if (storage.getItem(unique_key) == null) {
                         player.sendMessage(localizedStrings.itemAlreadySold);
-                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         return;
                     }
 
@@ -522,7 +594,7 @@ public class MarketExecutor implements CommandExecutor  {
                     }
 
                     storage.removeItem(unique_key);
-                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                 }
                 break;
             }
@@ -532,7 +604,7 @@ public class MarketExecutor implements CommandExecutor  {
                 if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                     if (menu_item_key.equals("MAIN_MENU")) {
-                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                     }
                 } else {
@@ -560,7 +632,7 @@ public class MarketExecutor implements CommandExecutor  {
                             storage.removeItem(unique_key);
 
                             player.getInventory().setItem(slot, item);
-                            player.sendMessage(localizedStrings.youHaveWithdrawnedItem);
+                            player.sendMessage(localizedStrings.youHaveWithdrawnItem);
                             player.openInventory(generateMySoldItemsMenu(player));
                             slot = -1;
                             hasEmptySlot = true;
@@ -579,7 +651,7 @@ public class MarketExecutor implements CommandExecutor  {
                 if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                     if (menu_item_key.equals("MAIN_MENU")) {
-                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                     } else if (menu_item_key.contains("FILTER:")) {
                         String filterName = menu_item_key.split(":")[1];
@@ -587,7 +659,7 @@ public class MarketExecutor implements CommandExecutor  {
                         playerCurrentItemFilter.put(playerName, filterName);
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
 
-                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName)));
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                     }
                 }
                 break;

@@ -46,7 +46,7 @@ public class ClickHandler implements Listener {
 
         if (rawSlot >= 0 && rawSlot <= 53){
             if (event.getCurrentItem() == null) return;
-            executor.onMenuItemClick(Objects.requireNonNull(Bukkit.getPlayer(playerName)), event.getCurrentItem());
+            executor.onMenuItemClick(Objects.requireNonNull(Bukkit.getPlayer(playerName)), event.getCurrentItem(), event.getClick());
         }
     }
 }
