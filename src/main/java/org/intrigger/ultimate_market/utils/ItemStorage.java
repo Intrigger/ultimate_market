@@ -179,6 +179,39 @@ public class ItemStorage {
         return null;
     }
 
+    public ArrayList<ItemStackNotation> getPlayerItems(String playerName, int page){
+        String sql = "SELECT * FROM items WHERE owner = ?;";
+        try{
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setString(1, playerName);
+            ResultSet result = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            ArrayList<ItemStackNotation> itemsToReturn = new ArrayList<>();
+
+
+            for (int i = 0; i < (page * 45); i++){
+                result.next();
+            }
+
+            for (int i = 0; i < 45; i++){
+                if (!result.next()) break;
+                itemsToReturn.add(new ItemStackNotation(result.getString("key"),
+                                result.getString("owner"),
+                                result.getLong("price"),
+                                result.getLong("time"),
+                                result.getBytes("bytes")
+                        )
+                );
+            }
+            return itemsToReturn;
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public ArrayList<ItemStackNotation> getAllPlayerItems(String playerName){
         String sql = "SELECT * FROM items WHERE owner = ? ORDER BY TIME DESC;";
         try{

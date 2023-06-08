@@ -270,7 +270,7 @@ public class MarketExecutor implements CommandExecutor  {
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
-        ArrayList<ItemStackNotation> myItems = storage.getAllPlayerItems(player.getName());
+        ArrayList<ItemStackNotation> myItems = storage.getPlayerItems(player.getName(), playerCurrentPage.get(player.getName()));
 
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
@@ -302,6 +302,37 @@ public class MarketExecutor implements CommandExecutor  {
         pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
         updatePage.setItemMeta(updatePageMeta);
         inventory.setItem(4, updatePage);
+
+        //
+        // LEFT PAGE
+        //
+        ItemStack leftPage = new ItemStack(Material.PAPER);
+        ItemMeta leftPageMeta = leftPage.getItemMeta();
+        leftPageMeta.setDisplayName(localizedStrings.previousPageButtonTitle);
+        lore = localizedStrings.previousPageButtonLore;
+        leftPageMeta.setLore(lore);
+
+        pdc = leftPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+        leftPage.setItemMeta(leftPageMeta);
+        inventory.setItem(3, leftPage);
+
+        //
+        // RIGHT PAGE
+        //
+        ItemStack rightPage = new ItemStack(Material.PAPER);
+        ItemMeta rightPageMeta = rightPage.getItemMeta();
+        rightPageMeta.setDisplayName(localizedStrings.nextPageButtonTitle);
+        lore = localizedStrings.nextPageButtonLore;
+        rightPageMeta.setLore(lore);
+
+        pdc = rightPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+        rightPage.setItemMeta(rightPageMeta);
+        inventory.setItem(5, rightPage);
+
 
         if (myItems != null){
             int keysSize = myItems.size();
@@ -465,6 +496,7 @@ public class MarketExecutor implements CommandExecutor  {
                     switch (menu_item_key) {
                         case "MY_SOLD_ITEMS":  // my sold items
                             playerCurrentMenu.put(playerName, "MY_SOLD_ITEMS");
+                            playerCurrentPage.put(playerName, 0);
                             player.openInventory(generateMySoldItemsMenu(player));
                             break;
                         case "UPDATE_PAGE":
@@ -614,6 +646,20 @@ public class MarketExecutor implements CommandExecutor  {
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                     }
                     else if (menu_item_key.equals("UPDATE_PAGE")){
+                        player.openInventory(generateMySoldItemsMenu(player));
+                    }
+                    else if (menu_item_key.equals("PAGE_LEFT")){
+                        System.out.println("items sold now: " + storage.playerItemsSoldNow(playerName));
+                        int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
+                        int currentPage = playerCurrentPage.get(playerName);
+                        playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                        player.openInventory(generateMySoldItemsMenu(player));
+                    }
+                    else if (menu_item_key.equals("PAGE_RIGHT")){
+                        System.out.println("items sold now: " + storage.playerItemsSoldNow(playerName));
+                        int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
+                        int currentPage = playerCurrentPage.get(playerName);
+                        playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                 } else {
