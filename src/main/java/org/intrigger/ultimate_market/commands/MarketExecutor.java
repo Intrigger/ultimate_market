@@ -304,15 +304,10 @@ public class MarketExecutor implements CommandExecutor  {
                     newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
                 }
                 else{
-                    if (!currentLore.contains(localizedStrings.price + price + localizedStrings.currency)){
-                        newLore.add(localizedStrings.price + price + localizedStrings.currency);
-                    }
 
+                    newLore.add(localizedStrings.price + price + localizedStrings.currency);
                     newLore.addAll(currentLore);
-
-                    if (!new HashSet<>(currentLore).containsAll(localizedStrings.pressToWithdrawFromSaleLore)){
-                        newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
-                    }
+                    newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
                 }
 
                 currentItemStack.setLore(newLore);
@@ -328,7 +323,7 @@ public class MarketExecutor implements CommandExecutor  {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
-        //TODO Добавить макс. количество предметов для продажи для каждой привилегии
+        //TODO Т.к. продаваемых предметов у игрока может быть много, надо добавить интерфейс для пролистывания
         //TODO Добавить перевод языка для купленного предмета (ENG --> ANY)
 
         if (!(commandSender instanceof Player)){
