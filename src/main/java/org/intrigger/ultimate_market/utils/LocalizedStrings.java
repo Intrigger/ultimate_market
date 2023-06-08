@@ -12,6 +12,7 @@ public class LocalizedStrings {
     public String mainMenuTitle;
     public String mySoldItemsTitle;
     public String itemCategoriesTitle;
+    public String confirmBuyingMenuTitle;
     public String myMarketButtonTitle;
     public List<String> myMarketButtonLore;
 
@@ -52,6 +53,11 @@ public class LocalizedStrings {
     public String sortingTypeButtonTitle;
     public List<String> sortingTypeButtonLore;
     public String itemSoldLimitReached;
+    public String confirmBuyingButtonTitle;
+    public List<String> confirmBuyingButtonLore;
+
+    public String cancelBuyingButtonTitle;
+    public List<String> cancelBuyingButtonLore;
     public ArrayList<String> titles;
     public LocalizedStrings(){
 
@@ -60,6 +66,7 @@ public class LocalizedStrings {
             config.set("titles.main_menu",   "&2&lUltimate &4&lMarket"  );
             config.set("titles.my_sold_items",   "&2&lMy Market"  );
             config.set("titles.item_categories",   "&2&lItem Categories"  );
+            config.set("titles.confirm_buying_menu", "&2&lConfirm Buying");
             
             config.set("strings.my_market_button.title",   "&6My Market"  );
             config.set("strings.my_market_button.lore", Arrays.asList(  "&aPress to see"  ,   "&ayour sold items"  ));
@@ -121,6 +128,12 @@ public class LocalizedStrings {
 
             config.set("strings.items_sold_limit_reached", "&cYou have reached the limit of items being sold at the same time!");
 
+            config.set("strings.confirm_buying_button.title", "&2Confirm buying");
+            config.set("strings.confirm_buying_button.lore", Arrays.asList("&7Press to confirm", "&7buying the item"));
+
+            config.set("strings.cancel_buying_button.title", "&4Cancel buying");
+            config.set("strings.cancel_buying_button.lore", Arrays.asList("&7Press to cancel", "&7buying the item"));
+            
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
             } catch (IOException e){
@@ -136,6 +149,8 @@ public class LocalizedStrings {
 
         mySoldItemsTitle = config.getString("titles.my_sold_items").replaceAll("&", "§");
         itemCategoriesTitle = config.getString("titles.item_categories").replaceAll("&", "§");
+
+        confirmBuyingMenuTitle = config.getString("titles.confirm_buying_menu").replaceAll("&", "§");
 
         myMarketButtonTitle = config.getString("strings.my_market_button.title").replaceAll("&", "§");
         
@@ -220,10 +235,18 @@ public class LocalizedStrings {
 
         itemSoldLimitReached = config.getString("strings.items_sold_limit_reached").replaceAll("&", "§");
 
+        confirmBuyingButtonTitle = config.getString("strings.confirm_buying_button.title").replaceAll("&", "§");
+        confirmBuyingButtonLore =  config.getStringList("strings.confirm_buying_button.lore");
+        confirmBuyingButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
+        cancelBuyingButtonTitle = config.getString("strings.cancel_buying_button.title").replaceAll("&", "§");
+        cancelBuyingButtonLore =  config.getStringList("strings.cancel_buying_button.lore");
+        cancelBuyingButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+        
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
         titles.add(mainMenuTitle);
         titles.add(mySoldItemsTitle);
+        titles.add(confirmBuyingMenuTitle);
     }
 }

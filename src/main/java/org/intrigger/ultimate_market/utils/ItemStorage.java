@@ -43,7 +43,8 @@ public class ItemStorage {
                     "OWNER TEXT," +
                     "PRICE INT," +
                     "MATERIAL TEXT," +
-                    "BYTES TEXT" +
+                    "BYTES TEXT," +
+                    "FULL INT" +
                     ");";
             statement.execute(sql);
             statement.closeOnCompletion();
@@ -54,10 +55,10 @@ public class ItemStorage {
         Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's Items Database Created Successfully!");
     }
 
-    public void addItem(String key, String ownerName, long price, long time, String material, ItemStack item){
+    public void addItem(String key, String ownerName, long price, long time, String material, ItemStack item, int full){
         byte[] itemBytes = item.serializeAsBytes();
 
-        String sql = "INSERT INTO items (KEY, TIME, OWNER, PRICE, MATERIAL, BYTES) VALUES(?, ?, ?, ?, ?, ?);";
+        String sql = "INSERT INTO items (KEY, TIME, OWNER, PRICE, MATERIAL, BYTES, FULL) VALUES(?, ?, ?, ?, ?, ?, ?);";
 
         try {
 
@@ -68,6 +69,7 @@ public class ItemStorage {
             statement.setLong(4, price);
             statement.setString(5, material);
             statement.setBytes(6, itemBytes);
+            statement.setInt(7, full);
             statement.execute();
             statement.closeOnCompletion();
         } catch (SQLException e) {
@@ -96,7 +98,8 @@ public class ItemStorage {
                     result.getString("owner"),
                     result.getLong("price"),
                     result.getLong("time"),
-                    result.getBytes("bytes"));
+                    result.getBytes("bytes"),
+                    result.getInt("full"));
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -166,8 +169,8 @@ public class ItemStorage {
                                                             result.getString("owner"),
                                                             result.getLong("price"),
                                                             result.getLong("time"),
-                                                            result.getBytes("bytes")
-                        )
+                                                            result.getBytes("bytes"),
+                                                            result.getInt("full"))
                 );
             }
 
@@ -200,8 +203,8 @@ public class ItemStorage {
                                 result.getString("owner"),
                                 result.getLong("price"),
                                 result.getLong("time"),
-                                result.getBytes("bytes")
-                        )
+                                result.getBytes("bytes"),
+                                result.getInt("full"))
                 );
             }
             return itemsToReturn;
@@ -231,8 +234,8 @@ public class ItemStorage {
                                 result.getString("owner"),
                                 result.getLong("price"),
                                 result.getLong("time"),
-                                result.getBytes("bytes")
-                        )
+                                result.getBytes("bytes"),
+                                result.getInt("full"))
                 );
             }
             return itemsToReturn;
@@ -333,8 +336,8 @@ public class ItemStorage {
                                 result.getString("owner"),
                                 result.getLong("price"),
                                 result.getLong("time"),
-                                result.getBytes("bytes")
-                        )
+                                result.getBytes("bytes"),
+                                result.getInt("full"))
                 );
             }
             return itemsToReturn;

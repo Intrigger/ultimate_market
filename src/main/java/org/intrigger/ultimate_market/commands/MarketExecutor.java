@@ -46,6 +46,7 @@ public class MarketExecutor implements CommandExecutor  {
 
     private Map<String, String> playerCurrentSortingType;
     private GroupsPermissions groupsPermissions;
+    private Map<String, ItemStackNotation> currentBuyingItem;
 
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
@@ -59,6 +60,7 @@ public class MarketExecutor implements CommandExecutor  {
         localizedStrings = new LocalizedStrings();
         playerCurrentSortingType = new HashMap<>();
         groupsPermissions = new GroupsPermissions();
+        currentBuyingItem = new HashMap<>();
     }
 
     public void closeDatabase(){
@@ -359,6 +361,75 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+    public Inventory generateConfirmFullMenu(String playerName, ItemStackNotation item){
+        String inventoryName = localizedStrings.confirmBuyingMenuTitle;
+        int inventorySize = 54;
+        Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
+        
+        //
+        // GREEN BUTTON
+        //
+        ItemStack green_button = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta green_button_meta = green_button.getItemMeta();
+        green_button_meta.setDisplayName(localizedStrings.confirmBuyingButtonTitle);
+        List<String> lore = localizedStrings.confirmBuyingButtonLore;
+        green_button_meta.setLore(lore);
+        green_button.setItemMeta(green_button_meta);
+        green_button_meta = green_button.getItemMeta();
+
+        PersistentDataContainer pdc = green_button_meta.getPersistentDataContainer();
+        NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "CONFIRM_BUYING");
+        green_button.setItemMeta(green_button_meta);
+        //
+        // RED BUTTON
+        //
+        ItemStack red_button = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta red_button_meta = red_button.getItemMeta();
+        red_button_meta.setDisplayName(localizedStrings.cancelBuyingButtonTitle);
+        lore = localizedStrings.cancelBuyingButtonLore;
+        red_button_meta.setLore(lore);
+        red_button.setItemMeta(red_button_meta);
+        red_button_meta = red_button.getItemMeta();
+
+        pdc = red_button_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "CANCEL_BUYING");
+        red_button.setItemMeta(red_button_meta);
+        //
+        // BLACK BUTTON (DOING NOTHING)
+        //
+        ItemStack black_button = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta black_button_meta = black_button.getItemMeta();
+        black_button_meta.setDisplayName(" ");
+        lore = Arrays.asList(" ");
+        black_button_meta.setLore(lore);
+        black_button.setItemMeta(black_button_meta);
+        
+        for (int row = 0; row <= 4; row++){
+            for (int column = 0; column < 9; column++){
+                if (column == 4) {
+                    inventory.setItem(row * 9 + column, black_button);
+                    continue;
+                }
+                if (column < 4){
+                    inventory.setItem(row * 9 + column, green_button);
+                }
+                else{
+                    inventory.setItem(row * 9 + column, red_button);
+                }
+            }
+        }
+
+        for (int column = 0; column < 9; column++){
+            inventory.setItem(5 * 9 + column, black_button);
+        }
+
+        inventory.setItem(2 * 9 + 4, ItemStack.deserializeBytes(item.bytes));
+        
+        return inventory;
+    }
+    
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
@@ -452,7 +523,91 @@ public class MarketExecutor implements CommandExecutor  {
 
             itemToSell.setItemMeta(meta);
 
-            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell);
+            int sell_full = 0;
+
+            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell, sell_full);
+
+            player.getItemInHand().setAmount(0);
+            for (String temp: localizedStrings.successfulPuttingUp){
+                player.sendMessage(temp);
+            }
+
+            if (price == 0){
+                for (String temp: localizedStrings.zeroPriceNotice){
+                    player.sendMessage(temp);
+                }
+            }
+
+        }
+        else if (strings.length == 3){
+            String arg3 = strings[2];
+            if (!MarketTabComplete.list.get(2).contains(arg3)){
+                for (String temp: localizedStrings.wrongCommandUsage){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
+            ItemStack itemToSell = player.getItemInHand();
+
+            if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
+                for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
+
+            String priceStr = strings[1];
+
+            if (!NumberUtils.isNumber(priceStr)){
+                for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
+
+            double priceDouble = Double.parseDouble(priceStr);
+
+            if (priceDouble < 0){
+                for (String temp: localizedStrings.negativePrice){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
+
+            String playerGroup = "default";
+
+            ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
+
+            for (int i = groups.size() - 1; i >= 0; i--){
+                String group = groups.get(i);
+                if (player.hasPermission("group." + group)){
+                    playerGroup = group;
+                    break;
+                }
+            }
+
+
+            if (storage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
+                player.sendMessage(localizedStrings.itemSoldLimitReached);
+                return true;
+            }
+
+            long price = Math.round(priceDouble);
+
+            String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
+                    StringBuilder::appendCodePoint, StringBuilder::append).toString();
+
+            ItemMeta meta = itemToSell.getItemMeta();
+
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
+
+            itemToSell.setItemMeta(meta);
+
+            int sell_full = arg3.equalsIgnoreCase("full") ? 1 : 0;
+
+            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell, sell_full);
 
             player.getItemInHand().setAmount(0);
             for (String temp: localizedStrings.successfulPuttingUp){
@@ -586,53 +741,9 @@ public class MarketExecutor implements CommandExecutor  {
                         return;
                     }
 
-                    ItemStack newItem = ItemStack.deserializeBytes(notation.bytes);
-                    ItemMeta meta = newItem.getItemMeta();
-
-                    pdc = meta.getPersistentDataContainer();
-                    NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
-                    pdc.remove(namespacedKey);
-                    newItem.setItemMeta(meta);
-
-                    boolean hasEmptySlot = false;
-
-                    for (int slot = 35; slot >= 0; slot--) {
-                        if (player.getInventory().getItem(slot) == null) {
-                            player.getInventory().setItem(slot, newItem);
-                            slot = -1;
-                            hasEmptySlot = true;
-                        }
-                    }
-
-                    if (!hasEmptySlot) {
-                        player.sendMessage(localizedStrings.freeUpInventorySpace);
-                        return;
-                    }
-
-                    rsp.getProvider().withdrawPlayer(playerName, price);
-                    rsp.getProvider().depositPlayer(itemOwner, price);
-
-                    String message = "";
-                    String item_name = newItem.getItemMeta().getDisplayName().isEmpty() ? newItem.getI18NDisplayName() : newItem.getItemMeta().getDisplayName();
-
-                    message = localizedStrings.playerBoughtItemNotification;
-                    message = message.replace("{PLAYER}", playerName);
-                    message = message.replace("{ITEM}", item_name);
-                    message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                    message = message.replace("{PRICE}", String.valueOf(price));
-                    message = message.replace("{CURRENCY}", localizedStrings.currency);
-                    if (getServer().getOnlinePlayers().contains(getServer().getPlayer(itemOwner)))
-                        Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
-
-                    message = localizedStrings.youBoughtItemNotification;
-                    message = message.replace("{ITEM}", item_name);
-                    message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                    message = message.replace("{PRICE}", String.valueOf(price));
-                    message = message.replace("{CURRENCY}", localizedStrings.currency);
-                    player.sendMessage(message);
-
-                    storage.removeItem(unique_key);
-                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                    playerCurrentMenu.put(playerName, "CONFIRM_MENU");
+                    currentBuyingItem.put(playerName, notation);
+                    player.openInventory(generateConfirmFullMenu(playerName, notation));
                 }
                 break;
             }
@@ -717,6 +828,74 @@ public class MarketExecutor implements CommandExecutor  {
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                     }
                 }
+                break;
+            }
+            case "CONFIRM_MENU":{
+                PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
+                    String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                    if (menu_item_key.equals("CONFIRM_BUYING")){
+
+                        ItemStackNotation notation = currentBuyingItem.get(playerName);
+                        String unique_key = notation.key;
+                        ItemStack newItem = ItemStack.deserializeBytes(notation.bytes);
+                        ItemMeta meta = newItem.getItemMeta();
+                        pdc = meta.getPersistentDataContainer();
+                        NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                        pdc.remove(namespacedKey);
+                        newItem.setItemMeta(meta);
+
+                        boolean hasEmptySlot = false;
+
+                        for (int slot = 35; slot >= 0; slot--) {
+                            if (player.getInventory().getItem(slot) == null) {
+                                player.getInventory().setItem(slot, newItem);
+                                slot = -1;
+                                hasEmptySlot = true;
+                            }
+                        }
+
+                        if (!hasEmptySlot) {
+                            player.sendMessage(localizedStrings.freeUpInventorySpace);
+                            return;
+                        }
+                        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                        String itemOwner = notation.owner;
+                        long price = notation.price;
+
+                        rsp.getProvider().withdrawPlayer(playerName, price);
+                        rsp.getProvider().depositPlayer(itemOwner, price);
+
+                        String message = "";
+                        String item_name = newItem.getItemMeta().getDisplayName().isEmpty() ? newItem.getI18NDisplayName() : newItem.getItemMeta().getDisplayName();
+
+                        message = localizedStrings.playerBoughtItemNotification;
+                        message = message.replace("{PLAYER}", playerName);
+                        message = message.replace("{ITEM}", item_name);
+                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                        message = message.replace("{PRICE}", String.valueOf(price));
+                        message = message.replace("{CURRENCY}", localizedStrings.currency);
+                        if (getServer().getOnlinePlayers().contains(getServer().getPlayer(itemOwner)))
+                            Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
+
+                        message = localizedStrings.youBoughtItemNotification;
+                        message = message.replace("{ITEM}", item_name);
+                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                        message = message.replace("{PRICE}", String.valueOf(price));
+                        message = message.replace("{CURRENCY}", localizedStrings.currency);
+                        player.sendMessage(message);
+
+
+                        storage.removeItem(unique_key);
+                        playerCurrentMenu.put(playerName, "MAIN_MENU");
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                    }
+                    else if (menu_item_key.equals("CANCEL_BUYING")){
+                        playerCurrentMenu.put(playerName, "MAIN_MENU");
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                    }
+                }
+
                 break;
             }
         }

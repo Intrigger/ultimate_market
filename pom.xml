@@ -6,7 +6,7 @@
 
     <groupId>org.intrigger</groupId>
     <artifactId>ultimate_market</artifactId>
-    <version>0.4</version>
+    <version>0.6</version>
     <packaging>jar</packaging>
 
     <name>ultimate_market</name>
