@@ -288,6 +288,21 @@ public class MarketExecutor implements CommandExecutor  {
         homeItem.setItemMeta(homeItemMeta);
         inventory.setItem(0, homeItem);
 
+        /*
+            Update Page Button
+         */
+        ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+        ItemMeta updatePageMeta = updatePage.getItemMeta();
+        updatePageMeta.setDisplayName(localizedStrings.updatePageButtonTitle);
+        lore = localizedStrings.updatePageButtonLore;
+        updatePageMeta.setLore(lore);
+
+        pdc = updatePageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+        updatePage.setItemMeta(updatePageMeta);
+        inventory.setItem(4, updatePage);
+
         if (myItems != null){
             int keysSize = myItems.size();
 
@@ -299,16 +314,9 @@ public class MarketExecutor implements CommandExecutor  {
 
                 List<String> currentLore = currentItemStack.getLore();
 
-                if (currentLore == null){
-                    newLore.add(localizedStrings.price + price + localizedStrings.currency);
-                    newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
-                }
-                else{
-
-                    newLore.add(localizedStrings.price + price + localizedStrings.currency);
-                    newLore.addAll(currentLore);
-                    newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
-                }
+                newLore.add(localizedStrings.price + price + localizedStrings.currency);
+                if (currentLore != null) newLore.addAll(currentLore);
+                newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
 
                 currentItemStack.setLore(newLore);
                 inventory.setItem(key + 9, currentItemStack);
@@ -572,57 +580,23 @@ public class MarketExecutor implements CommandExecutor  {
                     rsp.getProvider().withdrawPlayer(playerName, price);
                     rsp.getProvider().depositPlayer(itemOwner, price);
 
-
-                    if (getServer().getOnlinePlayers().contains(getServer().getPlayer(itemOwner))) {
-                        String message = "";
-                        if (newItem.getItemMeta().getDisplayName().isEmpty()) {
-                            message = localizedStrings.playerBoughtItemNotification;
-                            message = message.replace("{PLAYER}", playerName);
-                            message = message.replace("{ITEM}", newItem.getI18NDisplayName());
-                            message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                            message = message.replace("{PRICE}", String.valueOf(price));
-                            message = message.replace("{CURRENCY}", localizedStrings.currency);
-                            Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
-
-                            message = localizedStrings.youBoughtItemNotification;
-                            message = message.replace("{ITEM}", newItem.getI18NDisplayName());
-                            message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                            message = message.replace("{PRICE}", String.valueOf(price));
-                            message = message.replace("{CURRENCY}", localizedStrings.currency);
-                            player.sendMessage(message);
-                        } else {
-                            message = localizedStrings.playerBoughtItemNotification;
-                            message = message.replace("{PLAYER}", playerName);
-                            message = message.replace("{ITEM}", newItem.getItemMeta().getDisplayName());
-                            message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                            message = message.replace("{PRICE}", String.valueOf(price));
-                            message = message.replace("{CURRENCY}", localizedStrings.currency);
-                            Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
-
-                            message = localizedStrings.youBoughtItemNotification;
-                            message = message.replace("{ITEM}", newItem.getItemMeta().getDisplayName());
-                            message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                            message = message.replace("{PRICE}", String.valueOf(price));
-                            message = message.replace("{CURRENCY}", localizedStrings.currency);
-                            player.sendMessage(message);
-                        }
-                    }
-
                     String message = "";
-                    if (newItem.getItemMeta().getDisplayName().isEmpty()) {
-                        message = localizedStrings.youBoughtItemNotification;
-                        message = message.replace("{ITEM}", newItem.getI18NDisplayName());
-                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                        message = message.replace("{PRICE}", String.valueOf(price));
-                        message = message.replace("{CURRENCY}", localizedStrings.currency);
-                    } else {
-                        message = localizedStrings.youBoughtItemNotification;
-                        message = message.replace("{ITEM}", newItem.getItemMeta().getDisplayName());
-                        message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
-                        message = message.replace("{PRICE}", String.valueOf(price));
-                        message = message.replace("{CURRENCY}", localizedStrings.currency);
-                    }
+                    String item_name = newItem.getItemMeta().getDisplayName().isEmpty() ? newItem.getI18NDisplayName() : newItem.getItemMeta().getDisplayName();
 
+                    message = localizedStrings.playerBoughtItemNotification;
+                    message = message.replace("{PLAYER}", playerName);
+                    message = message.replace("{ITEM}", item_name);
+                    message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                    message = message.replace("{PRICE}", String.valueOf(price));
+                    message = message.replace("{CURRENCY}", localizedStrings.currency);
+                    if (getServer().getOnlinePlayers().contains(getServer().getPlayer(itemOwner)))
+                        Objects.requireNonNull(getServer().getPlayer(itemOwner)).sendMessage(message);
+
+                    message = localizedStrings.youBoughtItemNotification;
+                    message = message.replace("{ITEM}", item_name);
+                    message = message.replace("{AMOUNT}", String.valueOf(newItem.getAmount()));
+                    message = message.replace("{PRICE}", String.valueOf(price));
+                    message = message.replace("{CURRENCY}", localizedStrings.currency);
                     player.sendMessage(message);
 
                     storage.removeItem(unique_key);
@@ -638,6 +612,9 @@ public class MarketExecutor implements CommandExecutor  {
                     if (menu_item_key.equals("MAIN_MENU")) {
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
+                    }
+                    else if (menu_item_key.equals("UPDATE_PAGE")){
+                        player.openInventory(generateMySoldItemsMenu(player));
                     }
                 } else {
                     boolean hasEmptySlot = false;
