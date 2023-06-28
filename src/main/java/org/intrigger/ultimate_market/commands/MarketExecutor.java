@@ -1110,6 +1110,19 @@ public class MarketExecutor implements CommandExecutor  {
 
                         float price = (notation.full == 1) ? notation.price : notation.price * currentBuyingItemAmount.get(playerName);
 
+                        if (currentBuyingItemAmount.get(playerName) > storage.getAmount(unique_key)){
+                            player.sendMessage(localizedStrings.itemAlreadySold);
+                            if (storage.getAmount(unique_key) == 0){
+                                playerCurrentMenu.put(playerName, "MAIN_MENU");
+                                player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                                return;
+                            }
+                            playerCurrentMenu.put(playerName, "SELECT_AMOUNT_MENU");
+                            currentBuyingItemAmount.put(playerName, storage.getAmount(unique_key));
+                            player.openInventory(generateSelectAmountMenu(playerName, currentBuyingItem.get(playerName)));
+                            return;
+                        }
+
                         if (balance < price){
                             player.sendMessage(localizedStrings.notEnoughMoney);
                             playerCurrentMenu.put(playerName, "SELECT_AMOUNT_MENU");
