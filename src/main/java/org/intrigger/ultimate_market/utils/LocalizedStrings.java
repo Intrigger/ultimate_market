@@ -56,7 +56,12 @@ public class LocalizedStrings {
     public String confirmBuyingButtonTitle;
     public List<String> confirmBuyingButtonLore;
 
+    public String selectAmountMenuTitle;
     public String cancelBuyingButtonTitle;
+    public String buyEntirely;
+    public String buyByPieces;
+    public String pressLeftButton;
+    public String pressRightButton;
     public List<String> cancelBuyingButtonLore;
     public ArrayList<String> titles;
     public LocalizedStrings(){
@@ -67,6 +72,7 @@ public class LocalizedStrings {
             config.set("titles.my_sold_items",   "&2&lMy Market"  );
             config.set("titles.item_categories",   "&2&lItem Categories"  );
             config.set("titles.confirm_buying_menu", "&2&lConfirm Buying");
+            config.set("titles.select_amount_menu", "&2&lSelect Amount");
             
             config.set("strings.my_market_button.title",   "&6My Market"  );
             config.set("strings.my_market_button.lore", Arrays.asList(  "&aPress to see"  ,   "&ayour sold items"  ));
@@ -133,7 +139,13 @@ public class LocalizedStrings {
 
             config.set("strings.cancel_buying_button.title", "&4Cancel buying");
             config.set("strings.cancel_buying_button.lore", Arrays.asList("&7Press to cancel", "&7buying the item"));
-            
+
+            config.set("strings.buy_entirely", "&6Entirely:");
+            config.set("strings.buy_by_pieces", "&6By pieces:");
+
+            config.set("strings.press_left_button", "&7 Press LMB");
+            config.set("strings.press_right_button", "&7 Press RMB");
+
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
             } catch (IOException e){
@@ -242,11 +254,20 @@ public class LocalizedStrings {
         cancelBuyingButtonTitle = config.getString("strings.cancel_buying_button.title").replaceAll("&", "§");
         cancelBuyingButtonLore =  config.getStringList("strings.cancel_buying_button.lore");
         cancelBuyingButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
-        
+
+        selectAmountMenuTitle = config.getString("titles.select_amount_menu").replaceAll("&", "§");
+
+        buyByPieces = config.getString("strings.buy_by_pieces").replaceAll("&", "§");
+        buyEntirely = config.getString("strings.buy_entirely").replaceAll("&", "§");
+
+        pressLeftButton = config.getString("strings.press_left_button").replaceAll("&", "§");
+        pressRightButton = config.getString("strings.press_right_button").replaceAll("&", "§");
+
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
         titles.add(mainMenuTitle);
         titles.add(mySoldItemsTitle);
         titles.add(confirmBuyingMenuTitle);
+        titles.add(selectAmountMenuTitle);
     }
 }
