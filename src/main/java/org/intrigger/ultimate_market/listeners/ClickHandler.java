@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
 

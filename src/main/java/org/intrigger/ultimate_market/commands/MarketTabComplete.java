@@ -16,7 +16,7 @@ public class MarketTabComplete implements TabCompleter {
 
     public static List<List<String>> list = Arrays.asList(Arrays.asList("sell", "buy", "bid"),
             Collections.emptyList(),
-            Arrays.asList("full", "solo"));
+            Collections.singletonList("full"));
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {

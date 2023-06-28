@@ -47,6 +47,7 @@ public class MarketExecutor implements CommandExecutor  {
     private Map<String, String> playerCurrentSortingType;
     private GroupsPermissions groupsPermissions;
     private Map<String, ItemStackNotation> currentBuyingItem;
+    private Map<String, Integer> currentBuyingItemAmount;
 
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
@@ -61,6 +62,7 @@ public class MarketExecutor implements CommandExecutor  {
         playerCurrentSortingType = new HashMap<>();
         groupsPermissions = new GroupsPermissions();
         currentBuyingItem = new HashMap<>();
+        currentBuyingItemAmount = new HashMap<>();
     }
 
     public void closeDatabase(){
@@ -202,10 +204,16 @@ public class MarketExecutor implements CommandExecutor  {
                 ItemStack currentItemStack = ItemStack.deserializeBytes(itemStackNotation.bytes);
 
                 String owner = itemStackNotation.owner;
-                long price = itemStackNotation.price;
+                float price = itemStackNotation.price;
                 ArrayList<String> newLore = new ArrayList<>();
                 newLore.add(localizedStrings.seller + owner);
-                newLore.add(localizedStrings.price + price + localizedStrings.currency);
+                if (itemStackNotation.full == 1){
+                    newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+                }
+                else{
+                    newLore.add(localizedStrings.buyEntirely + " " + (long) Math.round(price  * itemStackNotation.amount) + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+                    newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f",(price)) + localizedStrings.currency + " " + localizedStrings.pressRightButton);
+                }
 
                 ItemMeta currentItemMeta = currentItemStack.getItemMeta();
                 List<String> currentLore = currentItemStack.getLore();
@@ -340,14 +348,20 @@ public class MarketExecutor implements CommandExecutor  {
             int keysSize = myItems.size();
 
             for (int key = 0; key < Math.min(54-9, keysSize); key++){
-                ItemStackNotation currentItemStackNotation = myItems.get(key);
-                ItemStack currentItemStack = (ItemStack.deserializeBytes(currentItemStackNotation.bytes));
+                ItemStackNotation itemStackNotation = myItems.get(key);
+                ItemStack currentItemStack = (ItemStack.deserializeBytes(itemStackNotation.bytes));
                 ArrayList<String> newLore = new ArrayList<>();
-                long price = currentItemStackNotation.price;
+                float price = itemStackNotation.price;
 
                 List<String> currentLore = currentItemStack.getLore();
 
-                newLore.add(localizedStrings.price + price + localizedStrings.currency);
+                if (itemStackNotation.full == 1){
+                    newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency);
+                }
+                else{
+                    newLore.add(localizedStrings.buyEntirely + " " + (long) Math.round(price  * itemStackNotation.amount) + localizedStrings.currency);
+                    newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f", price) + localizedStrings.currency);
+                }
                 if (currentLore != null) newLore.addAll(currentLore);
                 newLore.addAll(localizedStrings.pressToWithdrawFromSaleLore);
 
@@ -425,16 +439,239 @@ public class MarketExecutor implements CommandExecutor  {
             inventory.setItem(5 * 9 + column, black_button);
         }
 
-        inventory.setItem(2 * 9 + 4, ItemStack.deserializeBytes(item.bytes));
+        ItemStack item_ = ItemStack.deserializeBytes(item.bytes);
+
+        item_.setAmount(currentBuyingItemAmount.get(playerName));
+
+        inventory.setItem(2 * 9 + 4, item_);
+
+        ItemStack homeItem = new ItemStack(Material.CHEST);
+
+        ItemMeta mySlotsMeta = homeItem.getItemMeta();
+        mySlotsMeta.setDisplayName(localizedStrings.backToMainMenuButtonTitle);
+        lore = localizedStrings.backToMainMenuButtonLore;
+        mySlotsMeta.setLore(lore);
+        homeItem.setItemMeta(mySlotsMeta);
+        ItemMeta homeItemMeta = homeItem.getItemMeta();
+
+        pdc = homeItemMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
+
+        homeItem.setItemMeta(homeItemMeta);
+        inventory.setItem(0, homeItem);
         
         return inventory;
     }
-    
+
+    public Inventory generateSelectAmountMenu(String playerName, ItemStackNotation item){
+        String inventoryName = localizedStrings.selectAmountMenuTitle;
+        int inventorySize = 54;
+        Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
+
+        List<String> lore;
+        //
+        // BLACK BUTTON (DOING NOTHING)
+        //
+        ItemStack black_button = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta black_button_meta = black_button.getItemMeta();
+        black_button_meta.setDisplayName(" ");
+        lore = Arrays.asList(" ");
+        black_button_meta.setLore(lore);
+        black_button.setItemMeta(black_button_meta);
+
+        //
+        // GREEN BUTTON + 1
+        //
+        ItemStack green_button_1 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta green_button_1_meta = green_button_1.getItemMeta();
+        green_button_1_meta.setDisplayName("§2+1");
+        lore = Arrays.asList(" ");
+        green_button_1_meta.setLore(lore);
+        green_button_1.setItemMeta(green_button_1_meta);
+        green_button_1_meta = green_button_1.getItemMeta();
+
+        PersistentDataContainer pdc = green_button_1_meta.getPersistentDataContainer();
+        NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_PLUS_1");
+        green_button_1.setItemMeta(green_button_1_meta);
+
+        //
+        // GREEN BUTTON + 2
+        //
+        ItemStack green_button_2 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta green_button_2_meta = green_button_2.getItemMeta();
+        green_button_2_meta.setDisplayName("§2+2");
+        lore = Arrays.asList(" ");
+        green_button_2_meta.setLore(lore);
+        green_button_2.setItemMeta(green_button_2_meta);
+        green_button_2_meta = green_button_2.getItemMeta();
+
+        pdc = green_button_2_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_PLUS_2");
+        green_button_2.setItemMeta(green_button_2_meta);
+
+        //
+        // GREEN BUTTON + 4
+        //
+        ItemStack green_button_4 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta green_button_4_meta = green_button_4.getItemMeta();
+        green_button_4_meta.setDisplayName("§2+4");
+        lore = Arrays.asList(" ");
+        green_button_4_meta.setLore(lore);
+        green_button_4.setItemMeta(green_button_4_meta);
+        green_button_4_meta = green_button_4.getItemMeta();
+
+        pdc = green_button_4_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_PLUS_4");
+        green_button_4.setItemMeta(green_button_4_meta);
+
+        //
+        // GREEN BUTTON + 8
+        //
+        ItemStack green_button_8 = new ItemStack(Material.GREEN_STAINED_GLASS_PANE);
+        ItemMeta green_button_8_meta = green_button_8.getItemMeta();
+        green_button_8_meta.setDisplayName("§2+8");
+        lore = Arrays.asList(" ");
+        green_button_8_meta.setLore(lore);
+        green_button_8.setItemMeta(green_button_8_meta);
+        green_button_8_meta = green_button_8.getItemMeta();
+
+        pdc = green_button_8_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_PLUS_8");
+        green_button_8.setItemMeta(green_button_8_meta);
+
+        //
+        // RED BUTTON - 1
+        //
+        ItemStack red_button_1 = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta red_button_1_meta = red_button_1.getItemMeta();
+        red_button_1_meta.setDisplayName("§4-1");
+        lore = Arrays.asList(" ");
+        red_button_1_meta.setLore(lore);
+        red_button_1.setItemMeta(red_button_1_meta);
+        red_button_1_meta = red_button_1.getItemMeta();
+
+        pdc = red_button_1_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_MINUS_1");
+        red_button_1.setItemMeta(red_button_1_meta);
+
+        //
+        // RED BUTTON - 2
+        //
+        ItemStack red_button_2 = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta red_button_2_meta = red_button_2.getItemMeta();
+        red_button_2_meta.setDisplayName("§4-2");
+        lore = Arrays.asList(" ");
+        red_button_2_meta.setLore(lore);
+        red_button_2.setItemMeta(red_button_2_meta);
+        red_button_2_meta = red_button_2.getItemMeta();
+
+        pdc = red_button_2_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_MINUS_2");
+        red_button_2.setItemMeta(red_button_2_meta);
+
+        //
+        // RED BUTTON - 4
+        //
+        ItemStack red_button_4 = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta red_button_4_meta = red_button_4.getItemMeta();
+        red_button_4_meta.setDisplayName("§4-4");
+        lore = Arrays.asList(" ");
+        red_button_4_meta.setLore(lore);
+        red_button_4.setItemMeta(red_button_4_meta);
+        red_button_4_meta = red_button_4.getItemMeta();
+
+        pdc = red_button_4_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_MINUS_4");
+        red_button_4.setItemMeta(red_button_4_meta);
+
+        //
+        // RED BUTTON - 8
+        //
+        ItemStack red_button_8 = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+        ItemMeta red_button_8_meta = red_button_8.getItemMeta();
+        red_button_8_meta.setDisplayName("§4-8");
+        lore = Arrays.asList(" ");
+        red_button_8_meta.setLore(lore);
+        red_button_8.setItemMeta(red_button_8_meta);
+        red_button_8_meta = red_button_8.getItemMeta();
+
+        pdc = red_button_8_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "AMOUNT_MINUS_8");
+        red_button_8.setItemMeta(red_button_8_meta);
+
+        for (int i = 0; i < 6; i++){
+            for (int j = 0; j < 9; j++){
+                inventory.setItem(i * 9 + j, black_button);
+            }
+        }
+
+        ItemStack item_ = ItemStack.deserializeBytes(item.bytes);
+        item_.setAmount(currentBuyingItemAmount.get(playerName));
+
+        inventory.setItem(2 * 9 + 4, item_);
+
+        inventory.setItem(2 * 9 + 4 + 1, green_button_1);
+        inventory.setItem(2 * 9 + 4 + 2, green_button_2);
+        inventory.setItem(2 * 9 + 4 + 3, green_button_4);
+        inventory.setItem(2 * 9 + 4 + 4, green_button_8);
+
+        inventory.setItem(2 * 9 + 4 - 1, red_button_1);
+        inventory.setItem(2 * 9 + 4 - 2, red_button_2);
+        inventory.setItem(2 * 9 + 4 - 3, red_button_4);
+        inventory.setItem(2 * 9 + 4 - 4, red_button_8);
+
+        //
+        // BUY BUTTON
+        //
+        ItemStack buy_button = new ItemStack(Material.EMERALD);
+        ItemMeta buy_button_meta = buy_button.getItemMeta();
+        buy_button_meta.setDisplayName(localizedStrings.confirmBuyingButtonTitle);
+        lore = localizedStrings.confirmBuyingButtonLore;
+        buy_button_meta.setLore(lore);
+        buy_button.setItemMeta(buy_button_meta);
+        buy_button_meta = buy_button.getItemMeta();
+
+        pdc = buy_button_meta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "BUY_BUTTON");
+        buy_button.setItemMeta(buy_button_meta);
+
+        inventory.setItem(4 * 9 + 4, buy_button);
+
+        ItemStack homeItem = new ItemStack(Material.CHEST);
+
+        ItemMeta mySlotsMeta = homeItem.getItemMeta();
+        mySlotsMeta.setDisplayName(localizedStrings.backToMainMenuButtonTitle);
+        lore = localizedStrings.backToMainMenuButtonLore;
+        mySlotsMeta.setLore(lore);
+        homeItem.setItemMeta(mySlotsMeta);
+        ItemMeta homeItemMeta = homeItem.getItemMeta();
+
+        pdc = homeItemMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
+
+        homeItem.setItemMeta(homeItemMeta);
+        inventory.setItem(0, homeItem);
+
+        return inventory;
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
         //TODO Т.к. продаваемых предметов у игрока может быть много, надо добавить интерфейс для пролистывания
         //TODO Добавить перевод языка для купленного предмета (ENG --> ANY)
+        //TODO сделать парсер цены из строк типа "4kk или 1m или 2k"
 
         if (!(commandSender instanceof Player)){
             for (String temp: localizedStrings.commandCanBeUsedOnlyByPlayer)
@@ -525,7 +762,7 @@ public class MarketExecutor implements CommandExecutor  {
 
             int sell_full = 0;
 
-            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell, sell_full);
+            storage.addItem(unique_key, player.getName(), ((float) price / (float) itemToSell.getAmount()), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
 
             player.getItemInHand().setAmount(0);
             for (String temp: localizedStrings.successfulPuttingUp){
@@ -607,7 +844,7 @@ public class MarketExecutor implements CommandExecutor  {
 
             int sell_full = arg3.equalsIgnoreCase("full") ? 1 : 0;
 
-            storage.addItem(unique_key, player.getName(), price, System.nanoTime(), itemToSell.getType().toString(), itemToSell, sell_full);
+            storage.addItem(unique_key, player.getName(), sell_full == 1 ? price : (float) price / (float) itemToSell.getAmount(), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
 
             player.getItemInHand().setAmount(0);
             for (String temp: localizedStrings.successfulPuttingUp){
@@ -730,20 +967,38 @@ public class MarketExecutor implements CommandExecutor  {
 
                     ItemStackNotation notation = storage.getItem(unique_key);
                     String itemOwner = notation.owner;
-                    long price = notation.price;
+                    float price = notation.price;
 
                     if (Objects.equals(itemOwner, playerName)) {
                         player.sendMessage(localizedStrings.cannotByYourOwnItem);
                         return;
                     }
-                    if (!(balance >= price)) {
-                        player.sendMessage(localizedStrings.notEnoughMoney);
-                        return;
+
+                    if (notation.full == 0){
+                        if (clickEvent.isLeftClick()){
+                            currentBuyingItemAmount.put(playerName, notation.amount);
+                            playerCurrentMenu.put(playerName, "CONFIRM_MENU");
+                            currentBuyingItem.put(playerName, notation);
+                            player.openInventory(generateConfirmFullMenu(playerName, notation));
+                        }
+                        else if (clickEvent.isRightClick()){
+                            playerCurrentMenu.put(playerName, "SELECT_AMOUNT_MENU");
+                            currentBuyingItem.put(playerName, notation);
+                            currentBuyingItemAmount.put(playerName, 1);
+                            player.openInventory(generateSelectAmountMenu(playerName, notation));
+                        }
+                    }
+                    else{
+                        if (!(balance >= price)) {
+                            player.sendMessage(localizedStrings.notEnoughMoney);
+                            return;
+                        }
+                        currentBuyingItemAmount.put(playerName, notation.amount);
+                        playerCurrentMenu.put(playerName, "CONFIRM_MENU");
+                        currentBuyingItem.put(playerName, notation);
+                        player.openInventory(generateConfirmFullMenu(playerName, notation));
                     }
 
-                    playerCurrentMenu.put(playerName, "CONFIRM_MENU");
-                    currentBuyingItem.put(playerName, notation);
-                    player.openInventory(generateConfirmFullMenu(playerName, notation));
                 }
                 break;
             }
@@ -760,14 +1015,12 @@ public class MarketExecutor implements CommandExecutor  {
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                     else if (menu_item_key.equals("PAGE_LEFT")){
-                        System.out.println("items sold now: " + storage.playerItemsSoldNow(playerName));
                         int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
                         int currentPage = playerCurrentPage.get(playerName);
                         playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                     else if (menu_item_key.equals("PAGE_RIGHT")){
-                        System.out.println("items sold now: " + storage.playerItemsSoldNow(playerName));
                         int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
                         int currentPage = playerCurrentPage.get(playerName);
                         playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
@@ -836,14 +1089,33 @@ public class MarketExecutor implements CommandExecutor  {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                     if (menu_item_key.equals("CONFIRM_BUYING")){
 
+                        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                            return;
+                        }
+                        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                        if (rsp == null) {
+                            return;
+                        }
+                        long balance = (long) rsp.getProvider().getBalance(playerName);
+
                         ItemStackNotation notation = currentBuyingItem.get(playerName);
                         String unique_key = notation.key;
                         ItemStack newItem = ItemStack.deserializeBytes(notation.bytes);
+                        newItem.setAmount(currentBuyingItemAmount.get(playerName));
                         ItemMeta meta = newItem.getItemMeta();
                         pdc = meta.getPersistentDataContainer();
                         NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
                         pdc.remove(namespacedKey);
                         newItem.setItemMeta(meta);
+
+                        float price = (notation.full == 1) ? notation.price : notation.price * currentBuyingItemAmount.get(playerName);
+
+                        if (balance < price){
+                            player.sendMessage(localizedStrings.notEnoughMoney);
+                            playerCurrentMenu.put(playerName, "SELECT_AMOUNT_MENU");
+                            player.openInventory(generateSelectAmountMenu(playerName, currentBuyingItem.get(playerName)));
+                            return;
+                        }
 
                         boolean hasEmptySlot = false;
 
@@ -859,9 +1131,10 @@ public class MarketExecutor implements CommandExecutor  {
                             player.sendMessage(localizedStrings.freeUpInventorySpace);
                             return;
                         }
-                        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                        rsp = getServer().getServicesManager().getRegistration(Economy.class);
                         String itemOwner = notation.owner;
-                        long price = notation.price;
+
+
 
                         rsp.getProvider().withdrawPlayer(playerName, price);
                         rsp.getProvider().depositPlayer(itemOwner, price);
@@ -886,7 +1159,14 @@ public class MarketExecutor implements CommandExecutor  {
                         player.sendMessage(message);
 
 
-                        storage.removeItem(unique_key);
+                        if (storage.getAmount(unique_key) == currentBuyingItemAmount.get(playerName))
+                            storage.removeItem(unique_key);
+                        else{
+                            ItemStack item_ = ItemStack.deserializeBytes(notation.bytes);
+                            item_.setAmount(storage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName));
+
+                            storage.setAmount(unique_key, storage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName), item_.serializeAsBytes());
+                        }
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                     }
@@ -894,9 +1174,45 @@ public class MarketExecutor implements CommandExecutor  {
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                     }
+                    else if (menu_item_key.equals("MAIN_MENU")){
+                        playerCurrentMenu.put(playerName, "MAIN_MENU");
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                    }
                 }
 
                 break;
+            }
+            case "SELECT_AMOUNT_MENU":{
+                PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
+                    String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                    assert menu_item_key != null;
+                    if (menu_item_key.equals("BUY_BUTTON")){
+                        ItemStackNotation notation = currentBuyingItem.get(playerName);
+                        notation.amount = currentBuyingItemAmount.get(playerName);
+                        playerCurrentMenu.put(playerName, "CONFIRM_MENU");
+                        player.openInventory(generateConfirmFullMenu(playerName, notation));
+                    }
+                    else if (menu_item_key.equals("MAIN_MENU")){
+                        playerCurrentMenu.put(playerName, "MAIN_MENU");
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                    }else {
+                        String type = menu_item_key.split("_")[1];
+                        int delta = Integer.parseInt(menu_item_key.split("_")[2]);
+
+                        if (Objects.equals(type, "MINUS")) delta *= -1;
+
+                        int new_amount = currentBuyingItemAmount.get(playerName) + delta;
+
+                        new_amount = Math.min(new_amount, currentBuyingItem.get(playerName).amount);
+                        new_amount = Math.max(1, new_amount);
+
+                        currentBuyingItemAmount.put(playerName, new_amount);
+
+                        player.openInventory(generateSelectAmountMenu(playerName, currentBuyingItem.get(playerName)));
+                    }
+
+                }
             }
         }
 
