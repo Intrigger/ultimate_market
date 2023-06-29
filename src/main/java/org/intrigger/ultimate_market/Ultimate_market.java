@@ -1,5 +1,6 @@
 package org.intrigger.ultimate_market;
 
+import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +31,8 @@ public final class Ultimate_market extends JavaPlugin {
         Objects.requireNonNull(getCommand("ah")).setTabCompleter(new MarketTabComplete());
 
         new ClickHandler(this, marketExecutor);
+
+        Metrics metrics = new Metrics(this, 18923);
 
     }
 

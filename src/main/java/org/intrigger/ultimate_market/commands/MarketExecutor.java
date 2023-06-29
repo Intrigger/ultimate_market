@@ -211,7 +211,7 @@ public class MarketExecutor implements CommandExecutor  {
                     newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
                 }
                 else{
-                    newLore.add(localizedStrings.buyEntirely + " " + (long) Math.round(price  * itemStackNotation.amount) + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+                    newLore.add(localizedStrings.buyEntirely + " " + String.format("%.0f", Math.ceil((double)price  * (double)itemStackNotation.amount)) + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
                     newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f",(price)) + localizedStrings.currency + " " + localizedStrings.pressRightButton);
                 }
 
@@ -359,7 +359,7 @@ public class MarketExecutor implements CommandExecutor  {
                     newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency);
                 }
                 else{
-                    newLore.add(localizedStrings.buyEntirely + " " + (long) Math.round(price  * itemStackNotation.amount) + localizedStrings.currency);
+                    newLore.add(localizedStrings.buyEntirely + " " + String.format("%.0f", Math.ceil((double)price  * (double)itemStackNotation.amount)) + localizedStrings.currency);
                     newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f", price) + localizedStrings.currency);
                 }
                 if (currentLore != null) newLore.addAll(currentLore);
@@ -712,15 +712,33 @@ public class MarketExecutor implements CommandExecutor  {
             }
 
             String priceStr = strings[1];
+            String priceStrCopy = priceStr;
+            double priceDouble;
 
-            if (!NumberUtils.isNumber(priceStr)){
-                for (String temp: localizedStrings.youSpecifiedWrongPrice){
-                    player.sendMessage(temp);
-                }
-                return true;
+            for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
+                priceStrCopy = priceStrCopy.replaceAll(el, "");
             }
 
-            double priceDouble = Double.parseDouble(priceStr);
+            priceDouble = Double.parseDouble(priceStrCopy);
+
+            if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
+                priceDouble *= 1000000000;
+            }
+            else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
+                priceDouble *= 1000000;
+            }
+            else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
+                priceDouble *= 1000;
+            }
+            else{
+                if (!NumberUtils.isNumber(priceStr)){
+                    for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+            }
+
 
             if (priceDouble < 0){
                 for (String temp: localizedStrings.negativePrice){
