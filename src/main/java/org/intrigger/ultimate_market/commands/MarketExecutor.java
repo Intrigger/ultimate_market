@@ -669,10 +669,6 @@ public class MarketExecutor implements CommandExecutor  {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
-        //TODO Т.к. продаваемых предметов у игрока может быть много, надо добавить интерфейс для пролистывания
-        //TODO Добавить перевод языка для купленного предмета (ENG --> ANY)
-        //TODO сделать парсер цены из строк типа "4kk или 1m или 2k"
-
         if (!(commandSender instanceof Player)){
             for (String temp: localizedStrings.commandCanBeUsedOnlyByPlayer)
                 commandSender.sendMessage(temp);
