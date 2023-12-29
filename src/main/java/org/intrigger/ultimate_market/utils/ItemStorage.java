@@ -56,7 +56,7 @@ public class ItemStorage {
         Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's Items Database Created Successfully!");
     }
 
-    public void addItem(String key, String ownerName, float price, long time, String material, ItemStack item, int amount, int full){
+    public void addItem(String key, String ownerName, double price, long time, String material, ItemStack item, int amount, int full){
         byte[] itemBytes = item.serializeAsBytes();
 
         String sql = "INSERT INTO items (KEY, TIME, OWNER, PRICE, MATERIAL, BYTES, AMOUNT, FULL) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
@@ -67,7 +67,7 @@ public class ItemStorage {
             statement.setString(1, key);
             statement.setLong(2, time);
             statement.setString(3, ownerName);
-            statement.setFloat(4, price);
+            statement.setDouble(4, price);
             statement.setString(5, material);
             statement.setBytes(6, itemBytes);
             statement.setInt(7, amount);
@@ -98,7 +98,7 @@ public class ItemStorage {
             resultNotation = new ItemStackNotation(
                     result.getString("key"),
                     result.getString("owner"),
-                    result.getFloat("price"),
+                    result.getDouble("price"),
                     result.getLong("time"),
                     result.getBytes("bytes"),
                     result.getInt("amount"),
@@ -126,6 +126,9 @@ public class ItemStorage {
     }
 
     public int getAmount(String key){
+
+        if (getItem(key) == null) return 0;
+
         String sql = "SELECT amount FROM items WHERE key = ?";
         ResultSet result;
         try {
@@ -201,7 +204,7 @@ public class ItemStorage {
                 if (!result.next()) break;
                 itemsToReturn.add(new ItemStackNotation(result.getString("key"),
                                                             result.getString("owner"),
-                                                            result.getFloat("price"),
+                                                            result.getDouble("price"),
                                                             result.getLong("time"),
                                                             result.getBytes("bytes"),
                                                             result.getInt("amount"),
@@ -236,7 +239,7 @@ public class ItemStorage {
                 if (!result.next()) break;
                 itemsToReturn.add(new ItemStackNotation(result.getString("key"),
                                 result.getString("owner"),
-                                result.getFloat("price"),
+                                result.getDouble("price"),
                                 result.getLong("time"),
                                 result.getBytes("bytes"),
                                 result.getInt("amount"),
@@ -268,7 +271,7 @@ public class ItemStorage {
                 itemsToReturn.add(
                         new ItemStackNotation(result.getString("key"),
                                 result.getString("owner"),
-                                result.getFloat("price"),
+                                result.getDouble("price"),
                                 result.getLong("time"),
                                 result.getBytes("bytes"),
                                 result.getInt("amount"),
@@ -371,7 +374,7 @@ public class ItemStorage {
                 if (!result.next()) break;
                 itemsToReturn.add(new ItemStackNotation(result.getString("key"),
                                 result.getString("owner"),
-                                result.getFloat("price"),
+                                result.getDouble("price"),
                                 result.getLong("time"),
                                 result.getBytes("bytes"),
                                 result.getInt("amount"),

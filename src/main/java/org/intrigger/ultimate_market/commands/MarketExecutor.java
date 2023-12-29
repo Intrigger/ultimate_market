@@ -204,10 +204,10 @@ public class MarketExecutor implements CommandExecutor  {
                 ItemStack currentItemStack = ItemStack.deserializeBytes(itemStackNotation.bytes);
 
                 String owner = itemStackNotation.owner;
-                float price = itemStackNotation.price;
+                double price = itemStackNotation.price;
                 ArrayList<String> newLore = new ArrayList<>();
                 newLore.add(localizedStrings.seller + owner);
-                if (itemStackNotation.full == 1){
+                if (itemStackNotation.full == 1 || itemStackNotation.amount == 1){
                     newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
                 }
                 else{
@@ -351,11 +351,11 @@ public class MarketExecutor implements CommandExecutor  {
                 ItemStackNotation itemStackNotation = myItems.get(key);
                 ItemStack currentItemStack = (ItemStack.deserializeBytes(itemStackNotation.bytes));
                 ArrayList<String> newLore = new ArrayList<>();
-                float price = itemStackNotation.price;
+                double price = itemStackNotation.price;
 
                 List<String> currentLore = currentItemStack.getLore();
 
-                if (itemStackNotation.full == 1){
+                if (itemStackNotation.full == 1 || itemStackNotation.amount == 1){
                     newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency);
                 }
                 else{
@@ -761,7 +761,14 @@ public class MarketExecutor implements CommandExecutor  {
                 return true;
             }
 
-            long price = Math.round(priceDouble);
+            double price = Math.ceil(priceDouble);
+
+            if (price > Math.pow(10, 12)){
+                for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
 
             String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
                     StringBuilder::appendCodePoint, StringBuilder::append).toString();
@@ -776,7 +783,7 @@ public class MarketExecutor implements CommandExecutor  {
 
             int sell_full = 0;
 
-            storage.addItem(unique_key, player.getName(), ((float) price / (float) itemToSell.getAmount()), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
+            storage.addItem(unique_key, player.getName(), (price / itemToSell.getAmount()), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
 
             player.getItemInHand().setAmount(0);
             for (String temp: localizedStrings.successfulPuttingUp){
@@ -798,7 +805,7 @@ public class MarketExecutor implements CommandExecutor  {
                 }
                 return true;
             }
-            ItemStack itemToSell = player.getItemInHand();
+
 
             if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
                 for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
@@ -808,15 +815,43 @@ public class MarketExecutor implements CommandExecutor  {
             }
 
             String priceStr = strings[1];
+            String priceStrCopy = priceStr;
+            double priceDouble;
 
-            if (!NumberUtils.isNumber(priceStr)){
-                for (String temp: localizedStrings.youSpecifiedWrongPrice){
+            for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
+                priceStrCopy = priceStrCopy.replaceAll(el, "");
+            }
+
+            priceDouble = Double.parseDouble(priceStrCopy);
+
+            if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
+                priceDouble *= 1000000000;
+            }
+            else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
+                priceDouble *= 1000000;
+            }
+            else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
+                priceDouble *= 1000;
+            }
+            else{
+                if (!NumberUtils.isNumber(priceStr)){
+                    for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+            }
+
+            ItemStack itemToSell = player.getItemInHand();
+
+            if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
+                for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
                     player.sendMessage(temp);
                 }
                 return true;
             }
 
-            double priceDouble = Double.parseDouble(priceStr);
+            priceDouble = Math.round(priceDouble);
 
             if (priceDouble < 0){
                 for (String temp: localizedStrings.negativePrice){
@@ -843,7 +878,14 @@ public class MarketExecutor implements CommandExecutor  {
                 return true;
             }
 
-            long price = Math.round(priceDouble);
+            double price = Math.ceil(priceDouble);
+
+            if (price > Math.pow(10, 12)){
+                for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                    player.sendMessage(temp);
+                }
+                return true;
+            }
 
             String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
                     StringBuilder::appendCodePoint, StringBuilder::append).toString();
@@ -858,7 +900,7 @@ public class MarketExecutor implements CommandExecutor  {
 
             int sell_full = arg3.equalsIgnoreCase("full") ? 1 : 0;
 
-            storage.addItem(unique_key, player.getName(), sell_full == 1 ? price : (float) price / (float) itemToSell.getAmount(), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
+            storage.addItem(unique_key, player.getName(), sell_full == 1 ? price : price / itemToSell.getAmount(), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
 
             player.getItemInHand().setAmount(0);
             for (String temp: localizedStrings.successfulPuttingUp){
@@ -981,7 +1023,7 @@ public class MarketExecutor implements CommandExecutor  {
 
                     ItemStackNotation notation = storage.getItem(unique_key);
                     String itemOwner = notation.owner;
-                    float price = notation.price;
+                    double price = notation.price;
 
                     if (Objects.equals(itemOwner, playerName)) {
                         player.sendMessage(localizedStrings.cannotByYourOwnItem);
@@ -1122,7 +1164,7 @@ public class MarketExecutor implements CommandExecutor  {
                         pdc.remove(namespacedKey);
                         newItem.setItemMeta(meta);
 
-                        float price = (notation.full == 1) ? notation.price : notation.price * currentBuyingItemAmount.get(playerName);
+                        double price = (notation.full == 1) ? notation.price : notation.price * currentBuyingItemAmount.get(playerName);
 
                         if (currentBuyingItemAmount.get(playerName) > storage.getAmount(unique_key)){
                             player.sendMessage(localizedStrings.itemAlreadySold);

@@ -103,7 +103,7 @@ public class LocalizedStrings {
                                                                     "&7(hold the item you sold in your main hand)"));
 
             config.set("strings.specify_the_price", Arrays.asList("&cSpecify the price!",
-                                                                  "&7e.g. /ah <sell | bid> 500"));
+                                                                  "&7e.g. /ah <sell> 500"));
 
             config.set("strings.the_item_to_be_sold_must_be_held_in_the_hand", Arrays.asList("&cThe item to be sold must be held in the hand!"));
 
