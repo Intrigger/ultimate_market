@@ -1,5 +1,11 @@
 package org.intrigger.ultimate_market.commands;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -10,20 +16,25 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
-import org.checkerframework.checker.units.qual.A;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.utils.*;
 import org.jetbrains.annotations.NotNull;
 
 import net.milkbowl.vault.economy.Economy;
+
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.bukkit.Bukkit.getServer;
 
@@ -48,6 +59,9 @@ public class MarketExecutor implements CommandExecutor  {
     private GroupsPermissions groupsPermissions;
     private Map<String, ItemStackNotation> currentBuyingItem;
     private Map<String, Integer> currentBuyingItemAmount;
+    private Map<String, TextComponent> deserialized_strings;
+
+    public String mode;
 
     public MarketExecutor(Plugin _plugin){
         menus = new HashMap<>();
@@ -63,7 +77,11 @@ public class MarketExecutor implements CommandExecutor  {
         groupsPermissions = new GroupsPermissions();
         currentBuyingItem = new HashMap<>();
         currentBuyingItemAmount = new HashMap<>();
+        mode = "LEGACY";
     }
+
+
+    public String getMode(){ return this.mode;}
 
     public void closeDatabase(){
         storage.closeConnection();
@@ -73,164 +91,460 @@ public class MarketExecutor implements CommandExecutor  {
         return (int) (1 + Math.floor((double)totalItemsNumber / 45.0));
     }
 
+    /* Deserialize Lore*/
+    public List<Component> des_lore(List<String> lore){
+        LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+        List<Component> res = lore.stream().map(LEGACY::deserialize).collect(Collectors.toList());
+        ArrayList<Component> result = new ArrayList<>();
+        for (Component c: res){
+            result.add(c.decoration(TextDecoration.ITALIC, false));
+        }
+        return result;
+    }
+
     public Inventory generateMainMenu(String playerName, String filter, String sortingType){
 
-        String mainMenuTitle = localizedStrings.mainMenuTitle;
-        int inventorySize = 54;
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, mainMenuTitle);
+        String MODE = mode; //"LEGACY" (4 ms total) OR DEPRECATED (8 ms total)
+
+        if (MODE.equals("LEGACY")){
+            LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+
+            Map<String, Long> timestamps_start = new HashMap<>();
+            Map<String, Long> timestamps_stop = new HashMap<>();
+
+            timestamps_start.put("generateMainMenu()", System.nanoTime());
+            timestamps_start.put("setLore()", 0L);
+            timestamps_stop.put("setLore()", 0L);
+
+            int inventorySize = 54;
+
+            //Inventory inventory = Bukkit.createInventory(null, inventorySize, Component.text(localizedStrings.mainMenuTitle));
+            Inventory inventory = Bukkit.createInventory(null, inventorySize, LEGACY.deserialize(localizedStrings.mainMenuTitle));
 
         /*
             My Auction Slots Page Button
          */
-        ItemStack mySlots = new ItemStack(Material.CHEST);
-        ItemMeta mySlotsMeta = mySlots.getItemMeta();
-        mySlotsMeta.setDisplayName(localizedStrings.myMarketButtonTitle);
-        List<String> lore = localizedStrings.myMarketButtonLore;
-        mySlotsMeta.setLore(lore);
 
-        PersistentDataContainer pdc = mySlotsMeta.getPersistentDataContainer();
-        NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "MY_SOLD_ITEMS");
-        mySlots.setItemMeta(mySlotsMeta);
-        inventory.setItem(0, mySlots);
+            ItemStack mySlots = new ItemStack(Material.CHEST);
+            ItemMeta mySlotsMeta = mySlots.getItemMeta();
+            mySlotsMeta.displayName(LEGACY.deserialize(localizedStrings.myMarketButtonTitle).decoration(TextDecoration.ITALIC, false));
+            List<String> lore = localizedStrings.myMarketButtonLore;
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            mySlotsMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+
+
+            PersistentDataContainer pdc = mySlotsMeta.getPersistentDataContainer();
+            NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "MY_SOLD_ITEMS");
+            mySlots.setItemMeta(mySlotsMeta);
+            inventory.setItem(0, mySlots);
 
         /*
             Update Page Button
          */
-        ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
-        ItemMeta updatePageMeta = updatePage.getItemMeta();
-        updatePageMeta.setDisplayName(localizedStrings.updatePageButtonTitle);
-        lore = localizedStrings.updatePageButtonLore;
-        updatePageMeta.setLore(lore);
+            ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+            ItemMeta updatePageMeta = updatePage.getItemMeta();
+            updatePageMeta.displayName(LEGACY.deserialize(localizedStrings.updatePageButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.updatePageButtonLore;
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            updatePageMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
 
-        pdc = updatePageMeta.getPersistentDataContainer();
-        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
-        updatePage.setItemMeta(updatePageMeta);
-        inventory.setItem(4, updatePage);
+            pdc = updatePageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+            updatePage.setItemMeta(updatePageMeta);
+            inventory.setItem(4, updatePage);
 
-        //
-        // LEFT PAGE
-        //
-        ItemStack leftPage = new ItemStack(Material.PAPER);
-        ItemMeta leftPageMeta = leftPage.getItemMeta();
-        leftPageMeta.setDisplayName(localizedStrings.previousPageButtonTitle);
-        lore = localizedStrings.previousPageButtonLore;
-        leftPageMeta.setLore(lore);
+            //
+            // LEFT PAGE
+            //
+            ItemStack leftPage = new ItemStack(Material.PAPER);
+            ItemMeta leftPageMeta = leftPage.getItemMeta();
+            leftPageMeta.displayName(LEGACY.deserialize(localizedStrings.previousPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.previousPageButtonLore;
 
-        pdc = leftPageMeta.getPersistentDataContainer();
-        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
-        leftPage.setItemMeta(leftPageMeta);
-        inventory.setItem(3, leftPage);
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            leftPageMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
 
-        //
-        // RIGHT PAGE
-        //
-        ItemStack rightPage = new ItemStack(Material.PAPER);
-        ItemMeta rightPageMeta = rightPage.getItemMeta();
-        rightPageMeta.setDisplayName(localizedStrings.nextPageButtonTitle);
-        lore = localizedStrings.nextPageButtonLore;
-        rightPageMeta.setLore(lore);
+            pdc = leftPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+            leftPage.setItemMeta(leftPageMeta);
+            inventory.setItem(3, leftPage);
 
-        pdc = rightPageMeta.getPersistentDataContainer();
-        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
-        rightPage.setItemMeta(rightPageMeta);
-        inventory.setItem(5, rightPage);
+            //
+            // RIGHT PAGE
+            //
+            ItemStack rightPage = new ItemStack(Material.PAPER);
+            ItemMeta rightPageMeta = rightPage.getItemMeta();
+            rightPageMeta.displayName(LEGACY.deserialize(localizedStrings.nextPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.nextPageButtonLore;
 
-        //
-        // CATEGORIES PAGE
-        //
-        ItemStack categoriesPage = new ItemStack(Material.FEATHER);
-        ItemMeta categoriesPageMeta = categoriesPage.getItemMeta();
-        categoriesPageMeta.setDisplayName(localizedStrings.itemCategoriesButtonTitle);
-        lore = localizedStrings.itemCategoriesButtonLore;
-        categoriesPageMeta.setLore(lore);
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            rightPageMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
 
-        pdc = categoriesPageMeta.getPersistentDataContainer();
-        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "CATEGORIES_MENU");
-        categoriesPage.setItemMeta(categoriesPageMeta);
-        inventory.setItem(8, categoriesPage);
+            pdc = rightPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+            rightPage.setItemMeta(rightPageMeta);
+            inventory.setItem(5, rightPage);
 
-        //
-        // SORTING BUTTON
-        //
-        ItemStack sortingButton = new ItemStack(Material.HOPPER);
-        ItemMeta sortingButtonMeta = sortingButton.getItemMeta();
-        sortingButtonMeta.setDisplayName(localizedStrings.sortingTypeButtonTitle);
-        lore = new ArrayList<>(localizedStrings.sortingTypeButtonLore);
+            //
+            // CATEGORIES PAGE
+            //
+            ItemStack categoriesPage = new ItemStack(Material.FEATHER);
+            ItemMeta categoriesPageMeta = categoriesPage.getItemMeta();
+            categoriesPageMeta.displayName(LEGACY.deserialize(localizedStrings.itemCategoriesButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.itemCategoriesButtonLore;
 
-        switch (playerCurrentSortingType.get(playerName)){
-            case "NEW_FIRST":
-                lore.set(0, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(0));
-                break;
-            case "OLD_FIRST":
-                lore.set(1, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(1));
-                break;
-            case "CHEAP_FIRST":
-                lore.set(2, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(2));
-                break;
-            case "EXPENSIVE_FIRST":
-                lore.set(3, "§6✓ " + localizedStrings.sortingTypeButtonLore.get(3));
-                break;
-        }
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            categoriesPageMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
 
-        sortingButtonMeta.setLore(lore);
+            pdc = categoriesPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "CATEGORIES_MENU");
+            categoriesPage.setItemMeta(categoriesPageMeta);
+            inventory.setItem(8, categoriesPage);
 
-        pdc = sortingButtonMeta.getPersistentDataContainer();
-        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
-        pdc.set(namespacedKey, PersistentDataType.STRING, "SORTING_BUTTON");
-        sortingButton.setItemMeta(sortingButtonMeta);
-        inventory.setItem(7, sortingButton);
+            //
+            // SORTING BUTTON
+            //
+            ItemStack sortingButton = new ItemStack(Material.HOPPER);
+            ItemMeta sortingButtonMeta = sortingButton.getItemMeta();
+            sortingButtonMeta.displayName(LEGACY.deserialize(localizedStrings.sortingTypeButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = new ArrayList<>(localizedStrings.sortingTypeButtonLore);
+
+            switch (playerCurrentSortingType.get(playerName)){
+                case "NEW_FIRST":
+                    lore.set(0, "✓ " + localizedStrings.sortingTypeButtonLore.get(0));
+                    break;
+                case "OLD_FIRST":
+                    lore.set(1, "✓ " + localizedStrings.sortingTypeButtonLore.get(1));
+                    break;
+                case "CHEAP_FIRST":
+                    lore.set(2, "✓ " + localizedStrings.sortingTypeButtonLore.get(2));
+                    break;
+                case "EXPENSIVE_FIRST":
+                    lore.set(3, "✓ " + localizedStrings.sortingTypeButtonLore.get(3));
+                    break;
+            }
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            sortingButtonMeta.lore(des_lore(lore));
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = sortingButtonMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "SORTING_BUTTON");
+            sortingButton.setItemMeta(sortingButtonMeta);
+            inventory.setItem(7, sortingButton);
 
         /*
             Sorting items from 'items sold file' by time
          */
 
-        ArrayList<ItemStackNotation> queryResult;
+            ArrayList<ItemStackNotation> queryResult;
 
-        if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
-        else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
-
-        if (queryResult != null){
-            int currentSlot = 9;
+            timestamps_start.put("SQL", System.nanoTime());
 
 
-            for (ItemStackNotation itemStackNotation : queryResult) {
-                if (currentSlot > 53) break;
+            if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
 
-                ItemStack currentItemStack = ItemStack.deserializeBytes(itemStackNotation.bytes);
+            timestamps_stop.put("SQL", System.nanoTime());
 
-                String owner = itemStackNotation.owner;
-                double price = itemStackNotation.price;
-                ArrayList<String> newLore = new ArrayList<>();
-                newLore.add(localizedStrings.seller + owner);
-                if (itemStackNotation.full == 1 || itemStackNotation.amount == 1){
-                    newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+            if (queryResult != null){
+                int currentSlot = 9;
+
+                int queryResultSize = queryResult.size();
+
+                for (int i = 0; i < queryResultSize; i++) {
+                    if (currentSlot > 53) break;
+                    ItemStackNotation itemStackNotation = queryResult.get(i);
+                    ItemStack currentItemStack = ItemStack.deserializeBytes(itemStackNotation.bytes);
+
+                    String owner = itemStackNotation.owner;
+                    double price = itemStackNotation.price;
+                    ArrayList<Component> newLore = new ArrayList<>();
+                    newLore.add(LEGACY.deserialize(localizedStrings.seller + owner).decoration(TextDecoration.ITALIC, false));
+
+                    if (itemStackNotation.full == 1 || itemStackNotation.amount == 1){
+                        newLore.add(LEGACY.deserialize(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton).decoration(TextDecoration.ITALIC, false));
+                    }
+                    else{
+                        newLore.add(LEGACY.deserialize(localizedStrings.buyEntirely + " " + String.format("%.0f", Math.ceil((double)price  * (double)itemStackNotation.amount)) + localizedStrings.currency + " " + localizedStrings.pressLeftButton).decoration(TextDecoration.ITALIC, false));
+                        newLore.add(LEGACY.deserialize(localizedStrings.buyByPieces + " " + String.format("%.3f",(price)) + localizedStrings.currency + " " + localizedStrings.pressRightButton).decoration(TextDecoration.ITALIC, false));
+                    }
+
+                    ItemMeta currentItemMeta = currentItemStack.getItemMeta();
+                    List<Component> currentLore = currentItemStack.lore();
+
+                    if (currentLore != null)
+                        newLore.addAll(currentLore);
+
+
+                    //TODO Сделать setLore() быстрее, заменить на что-то более быстрое (пока что другие варианты некорректно отображают rgb)
+
+                    timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+                    currentItemMeta.lore(newLore); //ВОТ ЭТА СТРОКА МЕДЛЕННАЯ (ОКОЛО 6 MS!) была потому что deprecated
+                    timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+                    currentItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    currentItemStack.setItemMeta(currentItemMeta);
+
+                    inventory.setItem(currentSlot, currentItemStack);
+                    currentSlot++;
                 }
-                else{
-                    newLore.add(localizedStrings.buyEntirely + " " + String.format("%.0f", Math.ceil((double)price  * (double)itemStackNotation.amount)) + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
-                    newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f",(price)) + localizedStrings.currency + " " + localizedStrings.pressRightButton);
-                }
 
-                ItemMeta currentItemMeta = currentItemStack.getItemMeta();
-                List<String> currentLore = currentItemStack.getLore();
-
-                if (currentLore != null)
-                    newLore.addAll(currentLore);
-
-                currentItemMeta.setLore(newLore);
-                currentItemStack.setItemMeta(currentItemMeta);
-                inventory.setItem(currentSlot, currentItemStack);
-                currentSlot++;
             }
+
+            menus.put("MAIN_MENU", inventory);
+
+            timestamps_stop.put("generateMainMenu()", System.nanoTime());
+
+
+            try{
+                FileWriter fileWriter = new FileWriter("UltimateMarketTimings.txt", true);
+                PrintWriter printWriter = new PrintWriter(fileWriter);
+
+                for (Map.Entry<String, Long> entry: timestamps_stop.entrySet()){
+                    printWriter.println(entry.getKey() + ":\t" + (timestamps_stop.get(entry.getKey()) - timestamps_start.get(entry.getKey())) / 1_000_000.0f);
+                }
+                printWriter.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return inventory;
+        }
+        else {
+            Map<String, Long> timestamps_start = new HashMap<>();
+            Map<String, Long> timestamps_stop = new HashMap<>();
+
+            timestamps_start.put("generateMainMenu()", System.nanoTime());
+            timestamps_start.put("setLore()", 0L);
+            timestamps_stop.put("setLore()", 0L);
+
+
+            String mainMenuTitle = localizedStrings.mainMenuTitle;
+            int inventorySize = 54;
+
+            Inventory inventory = Bukkit.createInventory(null, inventorySize, mainMenuTitle);
+            //Inventory inventory = Bukkit.createInventory(null, 54, LEGACY.deserialize(mainMenuTitle));
+
+        /*
+            My Auction Slots Page Button
+         */
+
+            ItemStack mySlots = new ItemStack(Material.CHEST);
+            ItemMeta mySlotsMeta = mySlots.getItemMeta();
+            mySlotsMeta.setDisplayName(localizedStrings.myMarketButtonTitle);
+            List<String> lore = localizedStrings.myMarketButtonLore;
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            mySlotsMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+
+
+            PersistentDataContainer pdc = mySlotsMeta.getPersistentDataContainer();
+            NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "MY_SOLD_ITEMS");
+            mySlots.setItemMeta(mySlotsMeta);
+            inventory.setItem(0, mySlots);
+
+        /*
+            Update Page Button
+         */
+            ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+            ItemMeta updatePageMeta = updatePage.getItemMeta();
+            updatePageMeta.setDisplayName(localizedStrings.updatePageButtonTitle);
+            lore = localizedStrings.updatePageButtonLore;
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            updatePageMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = updatePageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+            updatePage.setItemMeta(updatePageMeta);
+            inventory.setItem(4, updatePage);
+
+            //
+            // LEFT PAGE
+            //
+            ItemStack leftPage = new ItemStack(Material.PAPER);
+            ItemMeta leftPageMeta = leftPage.getItemMeta();
+            leftPageMeta.setDisplayName(localizedStrings.previousPageButtonTitle);
+            lore = localizedStrings.previousPageButtonLore;
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            leftPageMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = leftPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+            leftPage.setItemMeta(leftPageMeta);
+            inventory.setItem(3, leftPage);
+
+            //
+            // RIGHT PAGE
+            //
+            ItemStack rightPage = new ItemStack(Material.PAPER);
+            ItemMeta rightPageMeta = rightPage.getItemMeta();
+            rightPageMeta.setDisplayName(localizedStrings.nextPageButtonTitle);
+            lore = localizedStrings.nextPageButtonLore;
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            rightPageMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = rightPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+            rightPage.setItemMeta(rightPageMeta);
+            inventory.setItem(5, rightPage);
+
+            //
+            // CATEGORIES PAGE
+            //
+            ItemStack categoriesPage = new ItemStack(Material.FEATHER);
+            ItemMeta categoriesPageMeta = categoriesPage.getItemMeta();
+            categoriesPageMeta.setDisplayName(localizedStrings.itemCategoriesButtonTitle);
+            lore = localizedStrings.itemCategoriesButtonLore;
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            categoriesPageMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = categoriesPageMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "CATEGORIES_MENU");
+            categoriesPage.setItemMeta(categoriesPageMeta);
+            inventory.setItem(8, categoriesPage);
+
+            //
+            // SORTING BUTTON
+            //
+            ItemStack sortingButton = new ItemStack(Material.HOPPER);
+            ItemMeta sortingButtonMeta = sortingButton.getItemMeta();
+            sortingButtonMeta.setDisplayName(localizedStrings.sortingTypeButtonTitle);
+            lore = localizedStrings.sortingTypeButtonLore;
+
+            switch (playerCurrentSortingType.get(playerName)){
+                case "NEW_FIRST":
+                    lore.set(0, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(0));
+                    break;
+                case "OLD_FIRST":
+                    lore.set(1, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(1));
+                    break;
+                case "CHEAP_FIRST":
+                    lore.set(2, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(2));
+                    break;
+                case "EXPENSIVE_FIRST":
+                    lore.set(3, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(3));
+                    break;
+            }
+
+            timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+            sortingButtonMeta.setLore(lore);
+            timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+            pdc = sortingButtonMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "SORTING_BUTTON");
+            sortingButton.setItemMeta(sortingButtonMeta);
+            inventory.setItem(7, sortingButton);
+
+        /*
+            Sorting items from 'items sold file' by time
+         */
+
+            ArrayList<ItemStackNotation> queryResult;
+
+            timestamps_start.put("SQL", System.nanoTime());
+
+
+            if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
+
+            timestamps_stop.put("SQL", System.nanoTime());
+
+
+
+            if (queryResult != null){
+                int currentSlot = 9;
+
+                int queryResultSize = queryResult.size();
+
+                for (int i = 0; i < queryResultSize; i++) {
+                    if (currentSlot > 53) break;
+                    ItemStackNotation itemStackNotation = queryResult.get(i);
+                    ItemStack currentItemStack = ItemStack.deserializeBytes(itemStackNotation.bytes);
+
+                    String owner = itemStackNotation.owner;
+                    double price = itemStackNotation.price;
+                    ArrayList<String> newLore = new ArrayList<>();
+                    newLore.add(localizedStrings.seller + owner);
+
+                    if (itemStackNotation.full == 1 || itemStackNotation.amount == 1){
+                        newLore.add(localizedStrings.buyEntirely + " " + price + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+                    }
+                    else{
+                        newLore.add(localizedStrings.buyEntirely + " " + String.format("%.0f", Math.ceil((double)price  * (double)itemStackNotation.amount)) + localizedStrings.currency + " " + localizedStrings.pressLeftButton);
+                        newLore.add(localizedStrings.buyByPieces + " " + String.format("%.3f",(price)) + localizedStrings.currency + " " + localizedStrings.pressRightButton);
+                    }
+
+                    ItemMeta currentItemMeta = currentItemStack.getItemMeta();
+                    List<String> currentLore = currentItemStack.getLore();
+
+                    if (currentLore != null)
+                        newLore.addAll(currentLore);
+
+
+                    //TODO Сделать setLore() быстрее, заменить на что-то более быстрое (пока что другие варианты некорректно отображают rgb)
+
+                    timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
+                    currentItemMeta.setLore(newLore); //ВОТ ЭТА СТРОКА МЕДЛЕННАЯ (ОКОЛО 6 MS!) была потому что deprecated
+                    timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
+
+                    currentItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    currentItemStack.setItemMeta(currentItemMeta);
+
+                    inventory.setItem(currentSlot, currentItemStack);
+                    currentSlot++;
+                }
+
+            }
+
+            menus.put("MAIN_MENU", inventory);
+
+            timestamps_stop.put("generateMainMenu()", System.nanoTime());
+
+
+            try{
+                FileWriter fileWriter = new FileWriter("UltimateMarketTimings.txt", true);
+                PrintWriter printWriter = new PrintWriter(fileWriter);
+
+                for (Map.Entry<String, Long> entry: timestamps_stop.entrySet()){
+                    printWriter.println(entry.getKey() + ":\t" + (timestamps_stop.get(entry.getKey()) - timestamps_start.get(entry.getKey())) / 1_000_000.0f);
+                }
+                printWriter.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return inventory;
         }
 
-        menus.put("MAIN_MENU", inventory);
-
-        return inventory;
     }
 
     public Inventory generateFiltersInventory(){
@@ -263,6 +577,13 @@ public class MarketExecutor implements CommandExecutor  {
 
             ItemMeta newItemMeta = currentItem.getItemMeta();
             newItemMeta.setDisplayName(filterKey);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_DESTROYS);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_DYE);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_PLACED_ON);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+            newItemMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
             newItemMeta.setLore(filterNotation.lore);
 
             pdc = newItemMeta.getPersistentDataContainer();
@@ -275,6 +596,8 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+
+    //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
     public Inventory generateMySoldItemsMenu(Player player){
         String inventoryName = localizedStrings.mySoldItemsTitle;
         int inventorySize = 54;
@@ -677,6 +1000,13 @@ public class MarketExecutor implements CommandExecutor  {
 
         Player player = (Player) commandSender;
         String playerName = player.getName();
+
+        if (player.hasPermission("OmniLegacyEvo.stage.1")){
+            player.sendMessage("У вас нет доступа к данной команде!");
+            player.sendMessage("Чтобы открыть доступ, вам нужен");
+            player.sendMessage("уровень развития 2.");
+            return true;
+        }
 
         if (strings.length == 0){
             playerCurrentMenu.put(playerName, "MAIN_MENU");

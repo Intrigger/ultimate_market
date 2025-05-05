@@ -1,6 +1,7 @@
 package org.intrigger.ultimate_market.utils;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.intrigger.ultimate_market.Ultimate_market;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,6 +68,9 @@ public class LocalizedStrings {
     public LocalizedStrings(){
 
         if (!new File("plugins/Ultimate Market/localized_strings.yml").exists()){
+
+            Ultimate_market.LOGGER.info("Файл localized_strings.yml не существует! Создаю!");
+
             YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/Ultimate Market/localized_strings.yml"));
             config.set("titles.main_menu",   "&2&lUltimate &4&lMarket"  );
             config.set("titles.my_sold_items",   "&2&lMy Market"  );
@@ -153,6 +157,9 @@ public class LocalizedStrings {
             }
 
 
+        }
+        else{
+            Ultimate_market.LOGGER.info("Файл localized_strings.yml существует!");
         }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/Ultimate Market/localized_strings.yml"));

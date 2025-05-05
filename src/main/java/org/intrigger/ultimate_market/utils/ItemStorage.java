@@ -1,5 +1,7 @@
 package org.intrigger.ultimate_market.utils;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -11,13 +13,12 @@ import org.json.simple.JSONObject;
 
 import java.sql.*;
 
-
 @SuppressWarnings("unchecked")
 public class ItemStorage {
 
     String storageFilePath;
-    JSONObject data;
     Connection conn;
+
     public ItemStorage(String _storageFilePath) {
         storageFilePath = _storageFilePath;
         conn = null;
@@ -162,7 +163,10 @@ public class ItemStorage {
         return -1;
     }
 
-    public ArrayList<ItemStackNotation> getAllKeys(int page, String sortingType){
+    public ArrayList<ItemStackNotation> getAllKeys(int page, String sortingType) {
+
+        Map<String, Long> timestamps_start = new HashMap<>();
+        Map<String, Long> timestamps_stop = new HashMap<>();
 
         String order_by_what = "TIME", asc_or_desc = "DESC";
         switch (sortingType){
@@ -184,24 +188,39 @@ public class ItemStorage {
                 break;
         }
 
-        String sql = "SELECT * FROM items ORDER BY " + order_by_what + " " + asc_or_desc + ";";
+        String sql = "SELECT * FROM items ORDER BY " + order_by_what + " + 0 " + asc_or_desc + " limit 45 offset ?;";
+        //String sql = "SELECT * FROM items;";
+
+        // 100 элементов -> 0.15 ms
+        // 1000 -> 0.35 ms
+        // 10000 -> 1.25 ms
+        // 100'000 -> 9.0 ms
+        // 1'000'000 -> 82 ms
+
+
         ResultSet result;
         try {
             PreparedStatement statement;
             statement = conn.prepareStatement(sql);
 
+            statement.setInt(1, page * 45);
+
+            timestamps_start.put("SQL_QUERY", System.nanoTime());
+
             result = statement.executeQuery();
             statement.closeOnCompletion();
 
+            timestamps_stop.put("SQL_QUERY", System.nanoTime());
+
             ArrayList<ItemStackNotation> itemsToReturn = new ArrayList<>();
 
+            //Временно убираю это для проверки (00:26 01.05.2025)
 
-            for (int i = 0; i < (page * 45); i++){
-                result.next();
-            }
+//            for (int i = 0; i < (page * 45); i++){
+//                result.next();
+//            }
 
-            for (int i = 0; i < 45; i++){
-                if (!result.next()) break;
+            while (result.next()){
                 itemsToReturn.add(new ItemStackNotation(result.getString("key"),
                                                             result.getString("owner"),
                                                             result.getDouble("price"),
@@ -212,8 +231,25 @@ public class ItemStorage {
                 );
             }
 
-            return itemsToReturn;
+            try{
+                FileWriter fileWriter = new FileWriter("UltimateMarketTimings.txt", true);
+                PrintWriter printWriter = new PrintWriter(fileWriter);
 
+                for (Map.Entry<String, Long> entry: timestamps_stop.entrySet()){
+                    printWriter.println(entry.getKey() + ":\t" + (timestamps_stop.get(entry.getKey()) - timestamps_start.get(entry.getKey())) / 1_000_000.0f);
+                }
+                printWriter.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            //itemsToReturn.sort((a, b) -> {return Double.compare(a.price, b.price); });
+
+            //itemsToReturn = new ArrayList<>(itemsToReturn.subList(45 * page, 45 * page + 45));
+
+            //allItems = itemsToReturn;
+
+            return itemsToReturn;
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -1,7 +1,9 @@
 package org.intrigger.ultimate_market.listeners;
 
+import jdk.vm.ci.code.site.Mark;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,12 +28,12 @@ public class ClickHandler implements Listener {
 
         if (!(event.getView().title() instanceof TextComponent)) return;
 
-        String inventoryName = event.getView().getTitle();
+        String inventoryName = executor.getMode().equals("LEGACY") ? event.getView().getTitle() : ((TextComponent) event.getView().title()).content();
 
         boolean contains = false;
 
         for (String s: executor.localizedStrings.titles){
-            if (s.equals(inventoryName)){
+            if (s.equals(inventoryName) || (ChatColor.stripColor(inventoryName).equals(ChatColor.stripColor(s)))){
                 contains = true;
                 break;
             }
