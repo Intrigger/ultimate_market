@@ -15,8 +15,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -60,6 +58,7 @@ public class MarketExecutor implements CommandExecutor  {
     private Map<String, ItemStackNotation> currentBuyingItem;
     private Map<String, Integer> currentBuyingItemAmount;
     private Map<String, TextComponent> deserialized_strings;
+    public Map<String, Long> last_clicked;
 
     public String mode;
 
@@ -77,6 +76,7 @@ public class MarketExecutor implements CommandExecutor  {
         groupsPermissions = new GroupsPermissions();
         currentBuyingItem = new HashMap<>();
         currentBuyingItemAmount = new HashMap<>();
+        last_clicked = new HashMap<>();
         mode = "LEGACY";
     }
 
@@ -693,6 +693,7 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+    //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
     public Inventory generateConfirmFullMenu(String playerName, ItemStackNotation item){
         String inventoryName = localizedStrings.confirmBuyingMenuTitle;
         int inventorySize = 54;
@@ -782,6 +783,7 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+    //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
     public Inventory generateSelectAmountMenu(String playerName, ItemStackNotation item){
         String inventoryName = localizedStrings.selectAmountMenuTitle;
         int inventorySize = 54;
