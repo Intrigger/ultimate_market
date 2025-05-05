@@ -290,8 +290,6 @@ public class MarketExecutor implements CommandExecutor  {
                         newLore.addAll(currentLore);
 
 
-                    //TODO Сделать setLore() быстрее, заменить на что-то более быстрое (пока что другие варианты некорректно отображают rgb)
-
                     timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
                     currentItemMeta.lore(newLore); //ВОТ ЭТА СТРОКА МЕДЛЕННАЯ (ОКОЛО 6 MS!) была потому что deprecated
                     timestamps_stop.put("setLore()", timestamps_stop.get("setLore()") + System.nanoTime());
@@ -508,9 +506,6 @@ public class MarketExecutor implements CommandExecutor  {
 
                     if (currentLore != null)
                         newLore.addAll(currentLore);
-
-
-                    //TODO Сделать setLore() быстрее, заменить на что-то более быстрое (пока что другие варианты некорректно отображают rgb)
 
                     timestamps_start.put("setLore()", timestamps_start.get("setLore()") + System.nanoTime());
                     currentItemMeta.setLore(newLore); //ВОТ ЭТА СТРОКА МЕДЛЕННАЯ (ОКОЛО 6 MS!) была потому что deprecated
