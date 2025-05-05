@@ -1244,11 +1244,12 @@ public class MarketExecutor implements CommandExecutor  {
         return true;
     }
 
+
+
     public void onMenuItemClick(Player player, ItemStack item, ClickType clickEvent){
 
         String playerName = player.getName();
         String currentMenu = playerCurrentMenu.get(playerName);
-
 
         switch (currentMenu) {
             case "MAIN_MENU": {
