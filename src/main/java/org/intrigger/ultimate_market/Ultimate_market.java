@@ -43,7 +43,7 @@ public final class Ultimate_market extends JavaPlugin {
         new ClickHandler(this, marketExecutor);
 
         Metrics metrics = new Metrics(this, 18923);
-        //setLog4JFilter();
+        setLog4JFilter();
     }
 
     private void setLog4JFilter(){

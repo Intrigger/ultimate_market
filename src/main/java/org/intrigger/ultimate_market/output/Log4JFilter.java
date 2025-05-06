@@ -6,8 +6,11 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.message.Message;
+import org.bukkit.Bukkit;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements a filter for Log4j to skip sensitive AuthMe commands.
@@ -42,7 +45,12 @@ public class Log4JFilter extends AbstractFilter implements Serializable {
      * @return The Result value
      */
     private static Result validateMessage(String message) {
-        return Result.DENY;
+        List<String> strings = new ArrayList<>(Bukkit.getPluginCommand("ah").getAliases());
+        strings.add("ah");
+        for (String s: strings){
+            if (message.contains("issued server command: /" + s)) return Result.DENY;
+        }
+        return Result.ACCEPT;
     }
 
     @Override
