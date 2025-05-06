@@ -2,15 +2,9 @@ package org.intrigger.ultimate_market.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.inventory.ItemStack;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
-import org.intrigger.ultimate_market.commands.MarketTabComplete;
-
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Map;
 
 public class BuyRequestStorage {
     String storageFilePath;

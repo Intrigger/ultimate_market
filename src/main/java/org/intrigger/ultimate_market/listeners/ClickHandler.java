@@ -1,14 +1,11 @@
 package org.intrigger.ultimate_market.listeners;
 
-import jdk.vm.ci.code.site.Mark;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
 

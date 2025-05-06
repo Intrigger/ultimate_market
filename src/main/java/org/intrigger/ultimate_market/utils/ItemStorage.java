@@ -3,14 +3,9 @@ package org.intrigger.ultimate_market.utils;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
-
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
-import org.intrigger.ultimate_market.commands.MarketExecutor;
-import org.json.simple.JSONObject;
-
 import java.sql.*;
 
 @SuppressWarnings("unchecked")

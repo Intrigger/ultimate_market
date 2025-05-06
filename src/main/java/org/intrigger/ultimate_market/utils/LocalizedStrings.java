@@ -2,7 +2,6 @@ package org.intrigger.ultimate_market.utils;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.intrigger.ultimate_market.Ultimate_market;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

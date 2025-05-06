@@ -9,7 +9,6 @@ import org.intrigger.ultimate_market.commands.MarketExecutor;
 import org.intrigger.ultimate_market.commands.MarketTabComplete;
 import org.intrigger.ultimate_market.listeners.ClickHandler;
 import org.intrigger.ultimate_market.output.Log4JFilter;
-
 import java.util.Objects;
 import java.util.logging.Logger;
 

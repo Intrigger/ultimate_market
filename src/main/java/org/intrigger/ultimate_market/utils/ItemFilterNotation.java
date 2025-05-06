@@ -1,7 +1,6 @@
 package org.intrigger.ultimate_market.utils;
 
 import org.bukkit.Material;
-
 import java.util.ArrayList;
 
 public class ItemFilterNotation {

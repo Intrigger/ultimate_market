@@ -5,8 +5,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class MarketTabComplete implements TabCompleter {
