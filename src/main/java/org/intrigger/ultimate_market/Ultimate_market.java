@@ -15,6 +15,14 @@ import java.util.logging.Logger;
 
 public final class Ultimate_market extends JavaPlugin {
 
+
+    /*
+    * 1. TODO Добавить поставки - режим, в котором игрок объявляет, что хочет купить товар X по некой цене.
+    *     Игроки видят, кто какой товар хочет купить и продают ему товар по этой цене.
+    * 2. TODO Добавить автосдачу на поставки. При нажатии кнопки игрок сдает весь инвентарь на самые выгодные для
+    *     каждого из предметов поставки, если такие есть
+    */
+
     public static Logger LOGGER;
 
     public static Plugin plugin;
@@ -36,7 +44,7 @@ public final class Ultimate_market extends JavaPlugin {
         new ClickHandler(this, marketExecutor);
 
         Metrics metrics = new Metrics(this, 18923);
-        setLog4JFilter();
+        //setLog4JFilter();
     }
 
     private void setLog4JFilter(){

@@ -35,7 +35,7 @@ public class ItemStorage {
 
     public void createParser() {
         try {
-            conn = DriverManager.getConnection("jdbc:sqlite:" + storageFilePath + "sold_items.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + storageFilePath + "db.db");
             Statement statement = conn.createStatement();
 
             String sql = "CREATE TABLE IF NOT EXISTS items (" +
@@ -50,11 +50,12 @@ public class ItemStorage {
                     ");";
             statement.execute(sql);
             statement.closeOnCompletion();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's Items Database Created Successfully!");
+        Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's ITEMS table was Created Successfully!");
     }
 
     public void addItem(String key, String ownerName, double price, long time, String material, ItemStack item, int amount, int full){

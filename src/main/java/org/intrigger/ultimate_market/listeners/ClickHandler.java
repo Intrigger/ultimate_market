@@ -28,19 +28,6 @@ public class ClickHandler implements Listener {
 
         String playerName = event.getWhoClicked().getName();
 
-        if (executor.last_clicked.containsKey(playerName)){
-            /* milliseconds */
-            long pause = 100;
-            if (System.currentTimeMillis() - executor.last_clicked.get(playerName) < pause){
-                event.setCancelled(true);
-                Bukkit.getPlayer(playerName).sendMessage("Подождите немного, прежде чем нажать снова!");
-                executor.last_clicked.put(playerName, System.currentTimeMillis());
-                return;
-            }
-        }
-
-        executor.last_clicked.put(playerName, System.currentTimeMillis());
-
         if (!(event.getView().title() instanceof TextComponent)) return;
 
         String inventoryName = executor.getMode().equals("LEGACY") ? event.getView().getTitle() : ((TextComponent) event.getView().title()).content();
@@ -58,6 +45,18 @@ public class ClickHandler implements Listener {
 
 
         event.setCancelled(true);
+
+        if (executor.last_clicked.containsKey(playerName)){
+            /* milliseconds */
+            long pause = 100;
+            if (System.currentTimeMillis() - executor.last_clicked.get(playerName) < pause){
+                Bukkit.getPlayer(playerName).sendMessage("Подождите немного, прежде чем нажать снова!");
+                executor.last_clicked.put(playerName, System.currentTimeMillis());
+                return;
+            }
+        }
+
+        executor.last_clicked.put(playerName, System.currentTimeMillis());
 
         int rawSlot = event.getRawSlot();
 

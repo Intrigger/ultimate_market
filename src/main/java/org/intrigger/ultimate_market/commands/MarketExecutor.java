@@ -2,14 +2,13 @@ package org.intrigger.ultimate_market.commands;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -29,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 import net.milkbowl.vault.economy.Economy;
 
+import javax.naming.Name;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
@@ -43,7 +43,8 @@ public class MarketExecutor implements CommandExecutor  {
 
     private static Plugin plugin;
 
-    private static ItemStorage storage;
+    public static ItemStorage itemStorage;
+    private static BuyRequestStorage buyRequestStorage;
 
     private static Map<String, Integer> playerCurrentPage;
     private static Map<String, String> playerCurrentItemFilter;
@@ -66,7 +67,8 @@ public class MarketExecutor implements CommandExecutor  {
         menus = new HashMap<>();
         playerCurrentMenu = new HashMap<>();
         plugin = _plugin;
-        storage = new ItemStorage("plugins/Ultimate Market/");
+        itemStorage = new ItemStorage("plugins/Ultimate Market/");
+        buyRequestStorage = new BuyRequestStorage("plugins/Ultimate Market/");
         playerCurrentPage = new HashMap<>();
         itemCategoriesProcessor = new ItemCategoriesProcessor("plugins/Ultimate Market/item_categories.yml");
         playerCurrentItemFilter = new HashMap<>();
@@ -84,7 +86,7 @@ public class MarketExecutor implements CommandExecutor  {
     public String getMode(){ return this.mode;}
 
     public void closeDatabase(){
-        storage.closeConnection();
+        itemStorage.closeConnection();
     }
 
     int getTotalPages(int totalItemsNumber){
@@ -141,6 +143,24 @@ public class MarketExecutor implements CommandExecutor  {
             pdc.set(namespacedKey, PersistentDataType.STRING, "MY_SOLD_ITEMS");
             mySlots.setItemMeta(mySlotsMeta);
             inventory.setItem(0, mySlots);
+
+            /*
+            *
+            *   BuyRequests Button (кнопка поставок)
+            *
+            */
+
+            ItemStack buyRequests = new ItemStack(Material.CHEST_MINECART);
+            ItemMeta buyRequestsMeta = buyRequests.getItemMeta();
+            buyRequestsMeta.displayName(LEGACY.deserialize(localizedStrings.buyRequestsButton).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.buyRequestsButtonLore;
+            buyRequestsMeta.lore(des_lore(lore));
+            pdc = buyRequestsMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "BUY_REQUESTS");
+            buyRequests.setItemMeta(buyRequestsMeta);
+            inventory.setItem(2, buyRequests);
+
 
         /*
             Update Page Button
@@ -255,8 +275,8 @@ public class MarketExecutor implements CommandExecutor  {
             timestamps_start.put("SQL", System.nanoTime());
 
 
-            if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
-            else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
+            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
 
             timestamps_stop.put("SQL", System.nanoTime());
 
@@ -471,8 +491,8 @@ public class MarketExecutor implements CommandExecutor  {
             timestamps_start.put("SQL", System.nanoTime());
 
 
-            if (filter == null) queryResult = storage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
-            else queryResult = storage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
+            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
 
             timestamps_stop.put("SQL", System.nanoTime());
 
@@ -542,6 +562,8 @@ public class MarketExecutor implements CommandExecutor  {
 
     }
 
+    //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
+
     public Inventory generateFiltersInventory(){
 
         String inventoryName = localizedStrings.itemCategoriesTitle;
@@ -591,14 +613,13 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
-
     //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
     public Inventory generateMySoldItemsMenu(Player player){
         String inventoryName = localizedStrings.mySoldItemsTitle;
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
-        ArrayList<ItemStackNotation> myItems = storage.getPlayerItems(player.getName(), playerCurrentPage.get(player.getName()));
+        ArrayList<ItemStackNotation> myItems = itemStorage.getPlayerItems(player.getName(), playerCurrentPage.get(player.getName()));
 
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
@@ -986,6 +1007,139 @@ public class MarketExecutor implements CommandExecutor  {
         return inventory;
     }
 
+    public Inventory generateMyBuyRequestsMenu(String playerName){
+        LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+
+        Inventory myBuyRequestsInventory = Bukkit.createInventory(null, 54, LEGACY.deserialize(localizedStrings.myBuyRequestsMenuTitle));
+        List<String> lore;
+        NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+
+        ItemStack buyRequests = new ItemStack(Material.CHEST_MINECART);
+        ItemMeta buyRequestsMeta = buyRequests.getItemMeta();
+        PersistentDataContainer pdc = buyRequestsMeta.getPersistentDataContainer();
+
+        buyRequestsMeta.displayName(LEGACY.deserialize(localizedStrings.buyRequestsButton).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.buyRequestsButtonLore;
+        buyRequestsMeta.lore(des_lore(lore));
+
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "BUY_REQUESTS");
+        buyRequests.setItemMeta(buyRequestsMeta);
+        myBuyRequestsInventory.setItem(0, buyRequests);
+
+        ArrayList<BuyRequestNotation> myBuyRequests = buyRequestStorage.getAllBuyRequests(playerName);
+
+        int currentSlot = 9;
+
+        for (int i = 0; i < myBuyRequests.size(); i++){
+            if (currentSlot > 53) break;
+            BuyRequestNotation requestNotation = myBuyRequests.get(i);
+            ItemStack request = ItemStack.deserializeBytes(requestNotation.bytes);
+
+            ItemMeta request_meta = request.getItemMeta();
+            lore = (List<String>) new ArrayList<>(localizedStrings.my_buy_requests_lore).clone();
+
+            for (int temp = 0; temp < lore.size(); temp++){
+                String s = lore.get(temp);
+                s = s.replace("{AMOUNT_NOW}", String.valueOf(requestNotation.amount_now));
+                s = s.replace("{AMOUNT_TOTAL}", String.valueOf(requestNotation.amount_total));
+                s = s.replace("{AVAILABLE}", String.valueOf(requestNotation.amount_now - requestNotation.amount_taken));
+                s = s.replace("{PRICE}", String.valueOf(requestNotation.price));
+                s = s.replace("{CURRENCY}", localizedStrings.currency);
+                lore.set(temp, s);
+            }
+
+            pdc = request_meta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "unique_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, requestNotation.key);
+
+            request_meta.lore(des_lore(lore));
+            request.setItemMeta(request_meta);
+
+            myBuyRequestsInventory.setItem(currentSlot, request);
+
+            currentSlot++;
+        }
+
+        return myBuyRequestsInventory;
+    }
+
+    public Inventory generateBuyRequestsMainMenu(){
+        LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+
+        //TODO Сделать локализацию через yml файл
+        Inventory buyRequestsInventory = Bukkit.createInventory(null, 54, LEGACY.deserialize(localizedStrings.buyRequestsMenuTitle));
+
+        /*
+         * Кнопка "Мои поставки"
+         */
+
+        ItemStack myBuyRequests = new ItemStack(Material.CHEST_MINECART);
+        ItemMeta myBuyRequestsMeta = myBuyRequests.getItemMeta();
+        myBuyRequestsMeta.displayName(LEGACY.deserialize(localizedStrings.myBuyRequests).decoration(TextDecoration.ITALIC, false));
+        List<String> lore = localizedStrings.myBuyRequestsButtonLore;
+        myBuyRequestsMeta.lore(des_lore(lore));
+
+        PersistentDataContainer pdc = myBuyRequestsMeta.getPersistentDataContainer();
+        NamespacedKey namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MY_BUY_REQUESTS");
+        myBuyRequests.setItemMeta(myBuyRequestsMeta);
+
+        buyRequestsInventory.setItem(0, myBuyRequests);
+
+        /*
+         * Кнопка "Назад в магазин"
+         */
+
+        ItemStack backToMarket = new ItemStack(Material.CHEST);
+        ItemMeta backToMarketMeta = backToMarket.getItemMeta();
+        backToMarketMeta.displayName(LEGACY.deserialize(localizedStrings.backToMainMenuButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.backToMainMenuButtonLore;
+        backToMarketMeta.lore(des_lore(lore));
+
+        pdc = backToMarketMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
+        backToMarket.setItemMeta(backToMarketMeta);
+
+        buyRequestsInventory.setItem(2, backToMarket);
+
+        ArrayList<BuyRequestNotation> buyRequests = buyRequestStorage.getAllBuyRequests();
+
+        int currentSlot = 9;
+
+        for (int i = 0; i < buyRequests.size(); i++){
+            if (currentSlot > 53) break;
+            BuyRequestNotation requestNotation = buyRequests.get(i);
+            ItemStack request = ItemStack.deserializeBytes(requestNotation.bytes);
+
+            ItemMeta request_meta = request.getItemMeta();
+            lore = (List<String>) new ArrayList<>(localizedStrings.buy_requests_lore).clone();
+
+            for (int temp = 0; temp < lore.size(); temp++){
+                String s = lore.get(temp);
+                s = s.replace("{AMOUNT}", String.valueOf(requestNotation.amount_total - requestNotation.amount_now));
+                s = s.replace("{PRICE}", String.valueOf(requestNotation.price));
+                s = s.replace("{CURRENCY}", localizedStrings.currency);
+                s = s.replace("{PLAYER}", requestNotation.owner);
+                lore.set(temp, s);
+            }
+
+            pdc = request_meta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "unique_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, requestNotation.key);
+
+            request_meta.lore(des_lore(lore));
+            request.setItemMeta(request_meta);
+
+            buyRequestsInventory.setItem(currentSlot, request);
+
+            currentSlot++;
+        }
+
+        return buyRequestsInventory;
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
@@ -1009,9 +1163,9 @@ public class MarketExecutor implements CommandExecutor  {
             playerCurrentMenu.put(playerName, "MAIN_MENU");
             playerCurrentPage.put(playerName, 0);
             playerCurrentSortingType.put(playerName, "NEW_FIRST");
-            playerCurrentItemFilter.put(player.getName(), null);
+            playerCurrentItemFilter.put(playerName, null);
             isMarketMenuOpen.put(playerName, true);
-            player.openInventory(generateMainMenu(player.getName(), null, playerCurrentSortingType.get(playerName)));
+            player.openInventory(generateMainMenu(playerName, null, playerCurrentSortingType.get(playerName)));
         } else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
                 for (String temp: localizedStrings.wrongCommandUsage){
@@ -1025,226 +1179,331 @@ public class MarketExecutor implements CommandExecutor  {
             }
         }
         else if (strings.length == 2){
-            ItemStack itemToSell = player.getItemInHand();
+            if (strings[0].equalsIgnoreCase("sell")){
+                ItemStack itemToSell = player.getItemInHand();
 
-            if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
-                for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
-                    player.sendMessage(temp);
+                if (itemToSell.getTranslationKey().equals("block.minecraft.air")){
+                    for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
+                        player.sendMessage(temp);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            String priceStr = strings[1];
-            String priceStrCopy = priceStr;
-            double priceDouble;
+                String priceStr = strings[1];
+                String priceStrCopy = priceStr;
+                double priceDouble;
 
-            for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
-                priceStrCopy = priceStrCopy.replaceAll(el, "");
-            }
+                for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
+                    priceStrCopy = priceStrCopy.replaceAll(el, "");
+                }
 
-            priceDouble = Double.parseDouble(priceStrCopy);
+                priceDouble = Double.parseDouble(priceStrCopy);
 
-            if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
-                priceDouble *= 1000000000;
-            }
-            else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
-                priceDouble *= 1000000;
-            }
-            else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
-                priceDouble *= 1000;
-            }
-            else{
-                if (!NumberUtils.isNumber(priceStr)){
+                if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
+                    priceDouble *= 1000000000;
+                }
+                else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
+                    priceDouble *= 1000000;
+                }
+                else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
+                    priceDouble *= 1000;
+                }
+                else{
+                    if (!NumberUtils.isNumber(priceStr)){
+                        for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                            player.sendMessage(temp);
+                        }
+                        return true;
+                    }
+                }
+
+
+                if (priceDouble < 0){
+                    for (String temp: localizedStrings.negativePrice){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+
+                String playerGroup = "default";
+
+                ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
+
+                for (int i = groups.size() - 1; i >= 0; i--){
+                    String group = groups.get(i);
+                    if (player.hasPermission("group." + group)){
+                        playerGroup = group;
+                        break;
+                    }
+                }
+
+
+                if (itemStorage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
+                    player.sendMessage(localizedStrings.itemSoldLimitReached);
+                    return true;
+                }
+
+                double price = Math.ceil(priceDouble);
+
+                if (price > Math.pow(10, 12)){
                     for (String temp: localizedStrings.youSpecifiedWrongPrice){
                         player.sendMessage(temp);
                     }
                     return true;
                 }
-            }
 
+                String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
+                        StringBuilder::appendCodePoint, StringBuilder::append).toString();
 
-            if (priceDouble < 0){
-                for (String temp: localizedStrings.negativePrice){
+                ItemMeta meta = itemToSell.getItemMeta();
+
+                PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
+
+                itemToSell.setItemMeta(meta);
+
+                int sell_full = 0;
+
+                itemStorage.addItem(unique_key, player.getName(), (price / itemToSell.getAmount()), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
+
+                player.getItemInHand().setAmount(0);
+                for (String temp: localizedStrings.successfulPuttingUp){
                     player.sendMessage(temp);
                 }
-                return true;
-            }
 
-            String playerGroup = "default";
-
-            ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
-
-            for (int i = groups.size() - 1; i >= 0; i--){
-                String group = groups.get(i);
-                if (player.hasPermission("group." + group)){
-                    playerGroup = group;
-                    break;
+                if (price == 0){
+                    for (String temp: localizedStrings.zeroPriceNotice){
+                        player.sendMessage(temp);
+                    }
                 }
             }
-
-
-            if (storage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
-                player.sendMessage(localizedStrings.itemSoldLimitReached);
-                return true;
+            else if (strings[0].equalsIgnoreCase("buy")){
+                //TODO Сделать покупку по средней цене на данный товар
+                player.sendMessage("Укажите цену!");
             }
-
-            double price = Math.ceil(priceDouble);
-
-            if (price > Math.pow(10, 12)){
-                for (String temp: localizedStrings.youSpecifiedWrongPrice){
-                    player.sendMessage(temp);
-                }
-                return true;
-            }
-
-            String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
-                    StringBuilder::appendCodePoint, StringBuilder::append).toString();
-
-            ItemMeta meta = itemToSell.getItemMeta();
-
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
-            pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
-
-            itemToSell.setItemMeta(meta);
-
-            int sell_full = 0;
-
-            storage.addItem(unique_key, player.getName(), (price / itemToSell.getAmount()), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
-
-            player.getItemInHand().setAmount(0);
-            for (String temp: localizedStrings.successfulPuttingUp){
-                player.sendMessage(temp);
-            }
-
-            if (price == 0){
-                for (String temp: localizedStrings.zeroPriceNotice){
-                    player.sendMessage(temp);
-                }
-            }
-
         }
         else if (strings.length == 3){
-            String arg3 = strings[2];
-            if (!MarketTabComplete.list.get(2).contains(arg3)){
-                for (String temp: localizedStrings.wrongCommandUsage){
-                    player.sendMessage(temp);
+            if (strings[0].equalsIgnoreCase("sell")){
+                String arg3 = strings[2];
+                if (!MarketTabComplete.list.get(2).contains(arg3)){
+                    for (String temp: localizedStrings.wrongCommandUsage){
+                        player.sendMessage(temp);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
 
-            if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
-                for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
-                    player.sendMessage(temp);
+                if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
+                    for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
+                        player.sendMessage(temp);
+                    }
+                    return true;
                 }
-                return true;
-            }
 
-            String priceStr = strings[1];
-            String priceStrCopy = priceStr;
-            double priceDouble;
+                String priceStr = strings[1];
+                String priceStrCopy = priceStr;
+                double priceDouble;
 
-            for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
-                priceStrCopy = priceStrCopy.replaceAll(el, "");
-            }
+                for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
+                    priceStrCopy = priceStrCopy.replaceAll(el, "");
+                }
 
-            priceDouble = Double.parseDouble(priceStrCopy);
+                priceDouble = Double.parseDouble(priceStrCopy);
 
-            if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
-                priceDouble *= 1000000000;
-            }
-            else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
-                priceDouble *= 1000000;
-            }
-            else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
-                priceDouble *= 1000;
-            }
-            else{
-                if (!NumberUtils.isNumber(priceStr)){
+                if (priceStr.endsWith("kkk") || (priceStr.endsWith("b")) || priceStr.endsWith("KKK") || (priceStr.endsWith("B"))){
+                    priceDouble *= 1000000000;
+                }
+                else if (priceStr.endsWith("kk") || (priceStr.endsWith("m")) || (priceStr.endsWith("KK")) || (priceStr.endsWith("M"))){
+                    priceDouble *= 1000000;
+                }
+                else if (priceStr.endsWith("k") || (priceStr.endsWith("K"))){
+                    priceDouble *= 1000;
+                }
+                else{
+                    if (!NumberUtils.isNumber(priceStr)){
+                        for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                            player.sendMessage(temp);
+                        }
+                        return true;
+                    }
+                }
+
+                ItemStack itemToSell = player.getItemInHand();
+
+                if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
+                    for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+
+                priceDouble = Math.round(priceDouble);
+
+                if (priceDouble < 0){
+                    for (String temp: localizedStrings.negativePrice){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+
+                String playerGroup = "default";
+
+                ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
+
+                for (int i = groups.size() - 1; i >= 0; i--){
+                    String group = groups.get(i);
+                    if (player.hasPermission("group." + group)){
+                        playerGroup = group;
+                        break;
+                    }
+                }
+
+
+                if (itemStorage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
+                    player.sendMessage(localizedStrings.itemSoldLimitReached);
+                    return true;
+                }
+
+                double price = Math.ceil(priceDouble);
+
+                if (price > Math.pow(10, 12)){
                     for (String temp: localizedStrings.youSpecifiedWrongPrice){
                         player.sendMessage(temp);
                     }
                     return true;
                 }
-            }
 
-            ItemStack itemToSell = player.getItemInHand();
+                String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
+                        StringBuilder::appendCodePoint, StringBuilder::append).toString();
 
-            if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
-                for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
+                ItemMeta meta = itemToSell.getItemMeta();
+
+                PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
+
+                itemToSell.setItemMeta(meta);
+
+                int sell_full = arg3.equalsIgnoreCase("full") ? 1 : 0;
+
+                itemStorage.addItem(unique_key, player.getName(), sell_full == 1 ? price : price / itemToSell.getAmount(), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
+
+                player.getItemInHand().setAmount(0);
+                for (String temp: localizedStrings.successfulPuttingUp){
                     player.sendMessage(temp);
                 }
-                return true;
-            }
 
-            priceDouble = Math.round(priceDouble);
-
-            if (priceDouble < 0){
-                for (String temp: localizedStrings.negativePrice){
-                    player.sendMessage(temp);
-                }
-                return true;
-            }
-
-            String playerGroup = "default";
-
-            ArrayList<String> groups = new ArrayList<>(groupsPermissions.maxItemsToSell.keySet());
-
-            for (int i = groups.size() - 1; i >= 0; i--){
-                String group = groups.get(i);
-                if (player.hasPermission("group." + group)){
-                    playerGroup = group;
-                    break;
+                if (price == 0){
+                    for (String temp: localizedStrings.zeroPriceNotice){
+                        player.sendMessage(temp);
+                    }
                 }
             }
+            else if (strings[0].equalsIgnoreCase("buy")){
 
 
-            if (storage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
-                player.sendMessage(localizedStrings.itemSoldLimitReached);
-                return true;
-            }
+                ItemStack itemToSell = player.getItemInHand().clone();
 
-            double price = Math.ceil(priceDouble);
-
-            if (price > Math.pow(10, 12)){
-                for (String temp: localizedStrings.youSpecifiedWrongPrice){
-                    player.sendMessage(temp);
+                if (itemToSell.getTranslationKey().equals("block.minecraft.air")){
+                    for (String x: localizedStrings.theItemToBeBoughtMustBeHeldInTheHand) player.sendMessage(x);
+                    return true;
                 }
-                return true;
-            }
-
-            String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
-                    StringBuilder::appendCodePoint, StringBuilder::append).toString();
-
-            ItemMeta meta = itemToSell.getItemMeta();
-
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
-            pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
-
-            itemToSell.setItemMeta(meta);
-
-            int sell_full = arg3.equalsIgnoreCase("full") ? 1 : 0;
-
-            storage.addItem(unique_key, player.getName(), sell_full == 1 ? price : price / itemToSell.getAmount(), System.nanoTime(), itemToSell.getType().toString(), itemToSell, itemToSell.getAmount(), sell_full);
-
-            player.getItemInHand().setAmount(0);
-            for (String temp: localizedStrings.successfulPuttingUp){
-                player.sendMessage(temp);
-            }
-
-            if (price == 0){
-                for (String temp: localizedStrings.zeroPriceNotice){
-                    player.sendMessage(temp);
+                String amount_str = strings[1];
+                String price_str = strings[2];
+                
+                if (!NumberUtils.isNumber(amount_str)){
+                    for (String x: localizedStrings.incorrectPrice) player.sendMessage(x);
+                    return true;
                 }
-            }
+                else if (Integer.parseInt(amount_str) < 0){
+                    for (String x: localizedStrings.negativePrice) player.sendMessage(x);
+                    return true;
+                }
 
+                String priceStrCopy = price_str;
+                double priceDouble;
+
+                for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
+                    priceStrCopy = priceStrCopy.replaceAll(el, "");
+                }
+
+                priceDouble = Double.parseDouble(priceStrCopy);
+
+                if (price_str.endsWith("kkk") || (price_str.endsWith("b")) || price_str.endsWith("KKK") || (price_str.endsWith("B"))){
+                    priceDouble *= 1000000000;
+                }
+                else if (price_str.endsWith("kk") || (price_str.endsWith("m")) || (price_str.endsWith("KK")) || (price_str.endsWith("M"))){
+                    priceDouble *= 1000000;
+                }
+                else if (price_str.endsWith("k") || (price_str.endsWith("K"))){
+                    priceDouble *= 1000;
+                }
+                else{
+                    if (!NumberUtils.isNumber(price_str)){
+                        for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                            player.sendMessage(temp);
+                        }
+                        return true;
+                    }
+                }
+
+                if (priceDouble < 0){
+                    for (String temp: localizedStrings.youSpecifiedWrongPrice){
+                        player.sendMessage(temp);
+                    }
+                    return true;
+                }
+
+                //TODO Ограничить максимальное возможное значение для amount_str
+                //System.out.println("Игрок " + playerName + " хочет купить " + itemToSell.getTranslationKey() + " в кол-во " + amount_str + " за " + priceDouble);
+
+                String unique_key = new Random().ints('a', 'z' + 1).limit(64).collect(StringBuilder::new,
+                        StringBuilder::appendCodePoint, StringBuilder::append).toString();
+
+
+//                PersistentDataContainer pdc = meta.getPersistentDataContainer();
+//                NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+//                pdc.set(namespacedKey, PersistentDataType.STRING, unique_key);
+
+                itemToSell.setAmount(1);
+
+                BuyRequestNotation buyRequestNotation = new BuyRequestNotation(unique_key, System.nanoTime(), playerName, priceDouble, itemToSell.getType().toString(), itemToSell.serializeAsBytes(), 0, 0, Integer.parseInt(amount_str));
+
+                if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                    return true;
+                }
+                RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                if (rsp == null) {
+                    return true;
+                }
+
+                rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                if (rsp == null) {
+                    return true;
+                }
+
+                long balance = (long) rsp.getProvider().getBalance(playerName);
+
+                if (balance < buyRequestNotation.price * buyRequestNotation.amount_total){
+                    player.sendMessage(localizedStrings.notEnoughMoney);
+                    return true;
+                }
+
+                rsp.getProvider().withdrawPlayer(playerName, buyRequestNotation.price * buyRequestNotation.amount_total);
+
+                buyRequestStorage.addRequest(buyRequestNotation);
+
+                player.sendMessage(localizedStrings.buy_request_created + (buyRequestNotation.price * buyRequestNotation.amount_total) + localizedStrings.currency);
+
+            }
+            else {
+                //TODO Сделать ошибку ввода команды
+            }
         }
         return true;
     }
-
-
 
     public void onMenuItemClick(Player player, ItemStack item, ClickType clickEvent){
 
@@ -1265,7 +1524,7 @@ public class MarketExecutor implements CommandExecutor  {
                         filters = itemCategoriesProcessor.filterNotations.get(currentFilter).filters;
                     }
 
-                    int pagesNum = getTotalPages(storage.getTotalItems(filters)) - 1;
+                    int pagesNum = getTotalPages(itemStorage.getTotalItems(filters)) - 1;
 
                     int currentPage = playerCurrentPage.get(playerName);
 
@@ -1330,6 +1589,10 @@ public class MarketExecutor implements CommandExecutor  {
                             playerCurrentSortingType.put(playerName, newSortingType);
                             player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
+                        case "BUY_REQUESTS":
+                            playerCurrentMenu.put(playerName, "BUY_REQUESTS");
+                            player.openInventory(generateBuyRequestsMainMenu());
+                            break;
                     }
                 } else {
                     if (getServer().getPluginManager().getPlugin("Vault") == null) {
@@ -1343,13 +1606,13 @@ public class MarketExecutor implements CommandExecutor  {
 
                     String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
 
-                    if (storage.getItem(unique_key) == null) {
+                    if (itemStorage.getItem(unique_key) == null) {
                         player.sendMessage(localizedStrings.itemAlreadySold);
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         return;
                     }
 
-                    ItemStackNotation notation = storage.getItem(unique_key);
+                    ItemStackNotation notation = itemStorage.getItem(unique_key);
                     String itemOwner = notation.owner;
                     double price = notation.price;
 
@@ -1399,13 +1662,13 @@ public class MarketExecutor implements CommandExecutor  {
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                     else if (menu_item_key.equals("PAGE_LEFT")){
-                        int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
+                        int pagesNum = getTotalPages(itemStorage.playerItemsSoldNow(playerName)) - 1;
                         int currentPage = playerCurrentPage.get(playerName);
                         playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                     else if (menu_item_key.equals("PAGE_RIGHT")){
-                        int pagesNum = getTotalPages(storage.playerItemsSoldNow(playerName)) - 1;
+                        int pagesNum = getTotalPages(itemStorage.playerItemsSoldNow(playerName)) - 1;
                         int currentPage = playerCurrentPage.get(playerName);
                         playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
@@ -1418,13 +1681,13 @@ public class MarketExecutor implements CommandExecutor  {
 
                             String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
 
-                            if (storage.getItem(unique_key) == null) {
+                            if (itemStorage.getItem(unique_key) == null) {
                                 player.sendMessage(localizedStrings.itemAlreadySold);
                                 player.openInventory(generateMySoldItemsMenu(player));
                                 return;
                             }
 
-                            ItemStack newItem = ItemStack.deserializeBytes(storage.getItem(unique_key).bytes);
+                            ItemStack newItem = ItemStack.deserializeBytes(itemStorage.getItem(unique_key).bytes);
                             ItemMeta meta = newItem.getItemMeta();
 
                             pdc = meta.getPersistentDataContainer();
@@ -1432,7 +1695,7 @@ public class MarketExecutor implements CommandExecutor  {
                             pdc.remove(namespacedKey);
                             item.setItemMeta(meta);
 
-                            storage.removeItem(unique_key);
+                            itemStorage.removeItem(unique_key);
 
                             player.getInventory().setItem(slot, item);
                             player.sendMessage(localizedStrings.youHaveWithdrawnItem);
@@ -1494,15 +1757,15 @@ public class MarketExecutor implements CommandExecutor  {
 
                         double price = (notation.full == 1) ? notation.price : notation.price * currentBuyingItemAmount.get(playerName);
 
-                        if (currentBuyingItemAmount.get(playerName) > storage.getAmount(unique_key)){
+                        if (currentBuyingItemAmount.get(playerName) > itemStorage.getAmount(unique_key)){
                             player.sendMessage(localizedStrings.itemAlreadySold);
-                            if (storage.getAmount(unique_key) == 0){
+                            if (itemStorage.getAmount(unique_key) == 0){
                                 playerCurrentMenu.put(playerName, "MAIN_MENU");
                                 player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                                 return;
                             }
                             playerCurrentMenu.put(playerName, "SELECT_AMOUNT_MENU");
-                            currentBuyingItemAmount.put(playerName, storage.getAmount(unique_key));
+                            currentBuyingItemAmount.put(playerName, itemStorage.getAmount(unique_key));
                             player.openInventory(generateSelectAmountMenu(playerName, currentBuyingItem.get(playerName)));
                             return;
                         }
@@ -1556,13 +1819,13 @@ public class MarketExecutor implements CommandExecutor  {
                         player.sendMessage(message);
 
 
-                        if (storage.getAmount(unique_key) == currentBuyingItemAmount.get(playerName))
-                            storage.removeItem(unique_key);
+                        if (itemStorage.getAmount(unique_key) == currentBuyingItemAmount.get(playerName))
+                            itemStorage.removeItem(unique_key);
                         else{
                             ItemStack item_ = ItemStack.deserializeBytes(notation.bytes);
-                            item_.setAmount(storage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName));
+                            item_.setAmount(itemStorage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName));
 
-                            storage.setAmount(unique_key, storage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName), item_.serializeAsBytes());
+                            itemStorage.setAmount(unique_key, itemStorage.getAmount(unique_key) - currentBuyingItemAmount.get(playerName), item_.serializeAsBytes());
                         }
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
@@ -1610,6 +1873,233 @@ public class MarketExecutor implements CommandExecutor  {
                     }
 
                 }
+            }
+            case "BUY_REQUESTS": {
+                LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+                PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
+                    String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                    assert menu_item_key != null;
+
+                    if (menu_item_key.equalsIgnoreCase("MAIN_MENU")) {
+                        player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
+                        playerCurrentMenu.put(playerName, "MAIN_MENU");
+                    } else if (menu_item_key.equalsIgnoreCase("MY_BUY_REQUESTS")) {
+                        player.openInventory(generateMyBuyRequestsMenu(playerName));
+                        playerCurrentMenu.put(playerName, "MY_BUY_REQUESTS");
+                    }
+                }
+                else {
+                    String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
+                    BuyRequestNotation buyRequestNotation = buyRequestStorage.getBuyRequest(unique_key);
+
+                    if (buyRequestNotation.amount_now < buyRequestNotation.amount_total) {
+
+                        Inventory playerInv = player.getInventory();
+                        for (ItemStack playerItem : playerInv.getContents()) {
+                            if (playerItem != null) {
+
+                                ItemStack playerItemCopy = playerItem.clone();
+                                ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                playerItemCopy.setAmount(1);
+
+                                ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                shopItemCopy.setAmount(1);
+
+                                if (playerItemCopy.equals(shopItemCopy)) {
+                                    playerItem.setAmount(playerItem.getAmount() - 1);
+                                    player.updateInventory();
+
+                                    String msg = localizedStrings.you_sold_item_notification;
+                                    msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                                    msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
+                                    msg = msg.replace("{AMOUNT}", "1");
+                                    msg = msg.replace("{PRICE}", String.valueOf(buyRequestNotation.price));
+                                    msg = msg.replace("{CURRENCY}", localizedStrings.currency);
+                                    player.sendMessage(msg);
+
+                                    //player.openInventory(generate_main_menu(player.getName()));
+                                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+                                    if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                                        return;
+                                    }
+                                    RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                                    if (rsp == null) {
+                                        return;
+                                    }
+
+                                    rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                                    rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price);
+
+                                    buyRequestStorage.updateBuyRequest(unique_key, 1);
+
+//                                    if (buyRequestNotation.amount_now + 1 >= buyRequestNotation.amount_total) {
+//                                        buyRequestStorage.finishBuyRequest(unique_key);
+//                                    }
+
+                                    player.openInventory(generateBuyRequestsMainMenu());
+
+                                    break;
+                                } else {
+                                    //
+                                }
+                            }
+                        }
+                    } else {
+                        //buyRequestStorage.finishBuyRequest(unique_key);
+                        player.openInventory(generateBuyRequestsMainMenu());
+                        player.sendMessage("Данная поставка уже закрыта!");
+                    }
+                }
+                break;
+            }
+            case "MY_BUY_REQUESTS":{
+                LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+                PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
+                    String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                    assert menu_item_key != null;
+
+                    if (menu_item_key.equalsIgnoreCase("BUY_REQUESTS")) {
+                        playerCurrentMenu.put(playerName, "BUY_REQUESTS");
+                        player.openInventory(generateBuyRequestsMainMenu());
+                    }
+                }
+                else{
+                    if (pdc.has(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING)){
+                        String unique_key = pdc.get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
+                        assert unique_key != null;
+
+                        BuyRequestNotation myRequest = buyRequestStorage.getBuyRequest(unique_key);
+
+                        if (myRequest == null) return;
+
+                        // Если это чисто ЛКМ
+                        if (clickEvent.isLeftClick() && (!clickEvent.isShiftClick())) {
+                            boolean hasEmptySlot = false;
+                            if (myRequest.amount_taken + 1 > myRequest.amount_now){
+                                player.sendMessage(localizedStrings.no_items_to_withdraw);
+                                return;
+                            }
+                            ItemStack newItem = ItemStack.deserializeBytes(myRequest.bytes);
+                            ItemMeta meta = newItem.getItemMeta();
+
+                            pdc = meta.getPersistentDataContainer();
+                            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                            pdc.remove(namespacedKey);
+                            newItem.setItemMeta(meta);
+
+                            for (int slot = 35; slot >= 0; slot--) {
+                                if (player.getInventory().getItem(slot) == null) {
+                                    buyRequestStorage.updateAmountTaken(unique_key, 1);
+
+                                    player.getInventory().setItem(slot, newItem);
+                                    player.sendMessage(localizedStrings.you_took_one_item_from_buy_requests);
+                                    player.openInventory(generateMyBuyRequestsMenu(playerName));
+                                    slot = -1;
+                                    hasEmptySlot = true;
+                                }
+                            }
+
+                            if (!hasEmptySlot) {
+                                player.sendMessage(localizedStrings.freeUpInventorySpace);
+                            }
+                        }
+                        else if (clickEvent.isLeftClick()) { //shift + ЛКМ = снять все что есть
+                            int empty_slots = 0;
+                            for (int slot = 35; slot >= 0; slot--) {
+                                if (player.getInventory().getItem(slot) == null) {
+                                    empty_slots++;
+                                }
+                            }
+                            if (empty_slots == 0){
+                                player.sendMessage(localizedStrings.freeUpInventorySpace);
+                                return;
+                            }
+
+                            ItemStack newItem = ItemStack.deserializeBytes(myRequest.bytes);
+                            ItemMeta meta = newItem.getItemMeta();
+                            pdc = meta.getPersistentDataContainer();
+                            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                            pdc.remove(namespacedKey);
+                            newItem.setItemMeta(meta);
+
+                            int max_stack_size = newItem.getMaxStackSize();
+                            int max_can_be_taken = max_stack_size * empty_slots;
+                            int available = myRequest.amount_now - myRequest.amount_taken;
+
+                            if (available == 0){
+                                player.sendMessage(localizedStrings.no_items_to_withdraw);
+                                return;
+                            }
+
+                            int to_be_taken = Math.min(available, max_can_be_taken);
+
+                            for (int slot = 35; slot >= 0; slot--) {
+                                if (player.getInventory().getItem(slot) == null) {
+                                    newItem.setAmount(Math.min(max_stack_size, to_be_taken));
+
+                                    buyRequestStorage.updateAmountTaken(unique_key, Math.min(max_stack_size, to_be_taken));
+
+                                    player.getInventory().setItem(slot, newItem);
+                                    to_be_taken -= Math.min(max_stack_size, to_be_taken);
+
+                                    if (to_be_taken == 0) slot = -1;
+                                }
+                            }
+                            player.openInventory(generateMyBuyRequestsMenu(playerName));
+                        }
+                        else if (clickEvent.isRightClick() && clickEvent.isShiftClick()){
+                            int available = myRequest.amount_now - myRequest.amount_taken;
+
+                            ItemStack newItem = ItemStack.deserializeBytes(myRequest.bytes);
+                            ItemMeta meta = newItem.getItemMeta();
+                            pdc = meta.getPersistentDataContainer();
+                            NamespacedKey namespacedKey = new NamespacedKey(plugin, "unique_key");
+                            pdc.remove(namespacedKey);
+                            newItem.setItemMeta(meta);
+
+                            int max_stack_size = newItem.getMaxStackSize();
+
+                            while (available != 0){
+                                ItemStack itemCopy = newItem.clone();
+                                itemCopy.setAmount(Math.min(available, max_stack_size));
+
+                                available -= Math.min(available, max_stack_size);
+                                player.getWorld().dropItem(player.getLocation(), itemCopy);
+                            }
+
+                            if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                                return;
+                            }
+                            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                            if (rsp == null) {
+                                return;
+                            }
+
+                            rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                            if (rsp == null) {
+                                return;
+                            }
+
+                            rsp.getProvider().depositPlayer(playerName, (myRequest.amount_total - available) * myRequest.price);
+
+                            player.sendMessage(localizedStrings.returned_money + (myRequest.amount_total - myRequest.amount_now) * myRequest.price + localizedStrings.currency);
+
+                            buyRequestStorage.finishBuyRequest(unique_key);
+                            player.openInventory(generateMyBuyRequestsMenu(playerName));
+                        }
+                    }
+                }
+                break;
             }
         }
 

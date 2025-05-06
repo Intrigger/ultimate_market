@@ -15,6 +15,8 @@ public class LocalizedStrings {
     public String itemCategoriesTitle;
     public String confirmBuyingMenuTitle;
     public String myMarketButtonTitle;
+    public String buyRequestsMenuTitle;
+    public String myBuyRequestsMenuTitle;
     public List<String> myMarketButtonLore;
 
     public String updatePageButtonTitle;
@@ -39,11 +41,13 @@ public class LocalizedStrings {
     public List<String> wrongCommandUsage;
     public List<String> specifyThePrice;
     public List<String> theItemToBeSoldMustBeHeldInTheHand;
+    public List<String> theItemToBeBoughtMustBeHeldInTheHand;
     public List<String> commandCanBeUsedOnlyByPlayer;
     public List<String> youSpecifiedWrongPrice;
     public List<String> negativePrice;
     public List<String> successfulPuttingUp;
     public List<String> zeroPriceNotice;
+    public List<String> incorrectPrice;
     public String itemAlreadySold;
     public String cannotByYourOwnItem;
     public String notEnoughMoney;
@@ -55,7 +59,10 @@ public class LocalizedStrings {
     public List<String> sortingTypeButtonLore;
     public String itemSoldLimitReached;
     public String confirmBuyingButtonTitle;
+    public String you_took_one_item_from_buy_requests;
     public List<String> confirmBuyingButtonLore;
+
+    public String you_sold_item_notification;
 
     public String selectAmountMenuTitle;
     public String cancelBuyingButtonTitle;
@@ -63,7 +70,16 @@ public class LocalizedStrings {
     public String buyByPieces;
     public String pressLeftButton;
     public String pressRightButton;
+    public String myBuyRequests;
     public List<String> cancelBuyingButtonLore;
+    public List<String> myBuyRequestsButtonLore;
+    public String buyRequestsButton;
+    public String no_items_to_withdraw;
+    public String returned_money;
+    public String buy_request_created;
+    public List<String> buyRequestsButtonLore;
+    public List<String> my_buy_requests_lore;
+    public List<String> buy_requests_lore;
     public ArrayList<String> titles;
     public LocalizedStrings(){
 
@@ -77,7 +93,9 @@ public class LocalizedStrings {
             config.set("titles.item_categories",   "&2&lItem Categories"  );
             config.set("titles.confirm_buying_menu", "&2&lConfirm Buying");
             config.set("titles.select_amount_menu", "&2&lSelect Amount");
-            
+            config.set("titles.buy_requests_menu", "&2&lBuy Requests");
+            config.set("titles.my_buy_requests_menu", "&2&lMuy Buy Requests");
+
             config.set("strings.my_market_button.title",   "&6My Market"  );
             config.set("strings.my_market_button.lore", Arrays.asList(  "&aPress to see"  ,   "&ayour sold items"  ));
 
@@ -116,6 +134,7 @@ public class LocalizedStrings {
             config.set("strings.you_specified_wrong_price", Arrays.asList("&cYou specified wrong price!"));
 
             config.set("strings.negative_price", Arrays.asList("&cYou specified negative price!"));
+            config.set("strings.negative_amount", Arrays.asList("&cYou specified negative amount!"));
 
             config.set("strings.successful_putting_up", Arrays.asList("&6You have successfully placed an item for sale"));
 
@@ -130,6 +149,7 @@ public class LocalizedStrings {
             config.set("strings.player_bought_item_notification", "&aPlayer &b{PLAYER} &abought &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
 
             config.set("strings.you_bought_item_notification", "&aYou successfully bought &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
+            config.set("strings.you_sold_item_notification", "&aYou successfully sold &d{ITEM} &7(x&b{AMOUNT}&7) &afor &6{PRICE}{CURRENCY}");
 
             config.set("strings.you_have_withdrawn_item", "&aYou have withdrawn item from sale!");
 
@@ -150,6 +170,34 @@ public class LocalizedStrings {
             config.set("strings.press_left_button", "&7 Press LMB");
             config.set("strings.press_right_button", "&7 Press RMB");
 
+            config.set("strings.my_buy_requests_button.title", "&aMy Buy Requests");
+            config.set("strings.my_buy_requests_button.lore", Arrays.asList("&aPress to open", "&ayour buy requests menu"));
+
+            config.set("strings.buy_requests_button.title", "&aBuy Requests");
+            config.set("strings.buy_requests_button.lore", Arrays.asList("&aPress to open", "&abuy requests menu"));
+
+            config.set("strings.no_items_to_withdraw", "&aNo items to withdraw from BuyRequests!");
+
+            config.set("strings.returned_money", "&aWe return you money: ");
+
+            config.set("strings.buy_request_created", "&aYou successfully created a Buy Request. We have withdrawn from your balance ");
+
+            config.set("strings.you_took_one_item_from_buy_requests", "&aYou have taken an item from Buy Requests!");
+
+            config.set("strings.my_buy_requests_lore", Arrays.asList(
+                    "",
+                    "Items bought: {AMOUNT_NOW} / {AMOUNT_TOTAL}",
+                    "Now available: {AVAILABLE}",
+                    "Price per 1 item: {PRICE}{CURRENCY}"
+                    ));
+
+            config.set("strings.buy_requests_lore", Arrays.asList(
+                    "",
+                    "Seller: {PLAYER}",
+                    "Needed: {AMOUNT}",
+                    "Price per 1 item: {PRICE}{CURRENCY}"
+            ));
+
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
             } catch (IOException e){
@@ -166,10 +214,14 @@ public class LocalizedStrings {
 
         mainMenuTitle = config.getString("titles.main_menu").replaceAll("&", "§");
 
+        buyRequestsMenuTitle = config.getString("titles.buy_requests_menu").replaceAll("&", "§");
+
         mySoldItemsTitle = config.getString("titles.my_sold_items").replaceAll("&", "§");
         itemCategoriesTitle = config.getString("titles.item_categories").replaceAll("&", "§");
 
         confirmBuyingMenuTitle = config.getString("titles.confirm_buying_menu").replaceAll("&", "§");
+
+        myBuyRequestsMenuTitle = config.getString("titles.my_buy_requests_menu").replaceAll("&", "§");
 
         myMarketButtonTitle = config.getString("strings.my_market_button.title").replaceAll("&", "§");
         
@@ -219,6 +271,9 @@ public class LocalizedStrings {
         theItemToBeSoldMustBeHeldInTheHand = config.getStringList("strings.the_item_to_be_sold_must_be_held_in_the_hand");
         theItemToBeSoldMustBeHeldInTheHand.replaceAll(s -> s.replaceAll("&", "§"));
 
+        theItemToBeBoughtMustBeHeldInTheHand = config.getStringList("strings.the_item_to_be_bought_must_be_held_in_the_hand");
+        theItemToBeBoughtMustBeHeldInTheHand.replaceAll(s -> s.replaceAll("&", "§"));
+
         commandCanBeUsedOnlyByPlayer = config.getStringList("strings.command_can_be_used_only_by_player");
         commandCanBeUsedOnlyByPlayer.replaceAll(s -> s.replaceAll("&", "§"));
 
@@ -245,6 +300,7 @@ public class LocalizedStrings {
         playerBoughtItemNotification = config.getString("strings.player_bought_item_notification").replaceAll("&", "§");
 
         youBoughtItemNotification = config.getString("strings.you_bought_item_notification").replaceAll("&", "§");
+        you_sold_item_notification = config.getString("strings.you_sold_item_notification").replaceAll("&", "§");
 
         youHaveWithdrawnItem = config.getString("strings.you_have_withdrawn_item").replaceAll("&", "§");
 
@@ -270,11 +326,39 @@ public class LocalizedStrings {
         pressLeftButton = config.getString("strings.press_left_button").replaceAll("&", "§");
         pressRightButton = config.getString("strings.press_right_button").replaceAll("&", "§");
 
+        myBuyRequests = config.getString("strings.my_buy_requests_button.title").replaceAll("&", "§");
+        myBuyRequestsButtonLore = config.getStringList("strings.my_buy_requests_button.lore");
+        myBuyRequestsButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        buyRequestsButton = config.getString("strings.buy_requests_button.title").replaceAll("&", "§");
+        buyRequestsButtonLore = config.getStringList("strings.buy_requests_button.lore");
+        buyRequestsButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        no_items_to_withdraw = config.getString("strings.no_items_to_withdraw").replaceAll("&", "§");
+        returned_money = config.getString("strings.returned_money").replaceAll("&", "§");
+        buy_request_created = config.getString("strings.buy_request_created").replaceAll("&", "§");
+
+        negativePrice = config.getStringList("strings.negative_price");
+        negativePrice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        incorrectPrice = config.getStringList("strings.incorrect_price");
+        incorrectPrice.replaceAll(s -> s.replaceAll("&", "§"));
+
+        my_buy_requests_lore = config.getStringList("strings.my_buy_requests_lore");
+        my_buy_requests_lore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        buy_requests_lore = config.getStringList("strings.buy_requests_lore");
+        buy_requests_lore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        you_took_one_item_from_buy_requests = config.getString("strings.you_took_one_item_from_buy_requests").replaceAll("&", "§");
+
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
         titles.add(mainMenuTitle);
         titles.add(mySoldItemsTitle);
         titles.add(confirmBuyingMenuTitle);
         titles.add(selectAmountMenuTitle);
+        titles.add(buyRequestsMenuTitle);
+        titles.add(myBuyRequestsMenuTitle);
     }
 }
