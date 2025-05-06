@@ -1896,6 +1896,34 @@ public class MarketExecutor implements CommandExecutor  {
                     if (clickEvent.isLeftClick() && (!clickEvent.isShiftClick())) {
                         if (buyRequestNotation.amount_now + 1 <= buyRequestNotation.amount_total) {
                             Inventory playerInv = player.getInventory();
+
+                            int player_has_items = 0;
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
+
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
+
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
+
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        player_has_items += playerItem.getAmount();
+                                    }
+                                }
+                            }
+
+                            if (player_has_items == 0){
+                                player.sendMessage("У вас нет этого предмета!");
+                                return;
+                            }
+
                             for (ItemStack playerItem : playerInv.getContents()) {
                                 if (playerItem != null) {
 
@@ -1913,8 +1941,6 @@ public class MarketExecutor implements CommandExecutor  {
 
                                     if (playerItemCopy.equals(shopItemCopy)) {
                                         playerItem.setAmount(playerItem.getAmount() - 1);
-                                        player.updateInventory();
-
                                         String msg = localizedStrings.you_sold_item_notification;
                                         msg = msg.replace("{ITEM}", buyRequestNotation.material);
                                         msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
@@ -1923,7 +1949,15 @@ public class MarketExecutor implements CommandExecutor  {
                                         msg = msg.replace("{CURRENCY}", localizedStrings.currency);
                                         player.sendMessage(msg);
 
-                                        //player.openInventory(generate_main_menu(player.getName()));
+
+                                        if (Bukkit.getPlayer(buyRequestNotation.owner).isOnline()){
+                                            msg = localizedStrings.buy_request_received;
+                                            msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                                            msg = msg.replace("{PLAYER}", playerName);
+                                            msg = msg.replace("{AMOUNT}", String.valueOf(1));
+                                            Objects.requireNonNull(Bukkit.getPlayer(buyRequestNotation.owner)).sendMessage(msg);
+                                        }
+
                                         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
 
                                         if (getServer().getPluginManager().getPlugin("Vault") == null) {
@@ -1940,7 +1974,9 @@ public class MarketExecutor implements CommandExecutor  {
 
                                         buyRequestStorage.updateBuyRequest(unique_key, 1);
 
-                                        player.openInventory(generateBuyRequestsMainMenu());
+                                        if (Bukkit.getPlayer(buyRequestNotation.owner).isOnline())
+                                            Bukkit.getPlayer(buyRequestNotation.owner).sendMessage("Поставка получена: " + buyRequestNotation.material + " x1");
+
                                         break;
                                     }
                                     else {
@@ -1948,6 +1984,8 @@ public class MarketExecutor implements CommandExecutor  {
                                     }
                                 }
                             }
+                            player.updateInventory();
+                            player.openInventory(generateBuyRequestsMainMenu());
                         }
                         else {
                             //buyRequestStorage.finishBuyRequest(unique_key);
@@ -2013,10 +2051,130 @@ public class MarketExecutor implements CommandExecutor  {
                                     }
                                 }
                             }
-                            player.updateInventory();
+
+                            String msg = localizedStrings.you_sold_item_notification;
+                            msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                            msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
+                            msg = msg.replace("{AMOUNT}", String.valueOf(stack_size));
+                            msg = msg.replace("{PRICE}", String.valueOf(buyRequestNotation.price * stack_size));
+                            msg = msg.replace("{CURRENCY}", localizedStrings.currency);
+                            player.sendMessage(msg);
+
+                            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+                            if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                                return;
+                            }
+                            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                            if (rsp == null) {
+                                return;
+                            }
+
+                            rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                            rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price * stack_size);
+
+                            if (Bukkit.getPlayer(buyRequestNotation.owner).isOnline()){
+                                msg = localizedStrings.buy_request_received;
+                                msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                                msg = msg.replace("{PLAYER}", playerName);
+                                msg = msg.replace("{AMOUNT}", String.valueOf(stack_size));
+                                Objects.requireNonNull(Bukkit.getPlayer(buyRequestNotation.owner)).sendMessage(msg);
+                            }
                         }
                         else{
                             player.sendMessage("Невозможно сдать ровно 1 стак предмета!");
+                        }
+                        player.updateInventory();
+                        player.openInventory(generateBuyRequestsMainMenu());
+                    }
+                    else if (clickEvent.isRightClick()){ //Shift + ПКМ
+                        if (buyRequestNotation.amount_now < buyRequestNotation.amount_total){
+                            int player_has_items = 0;
+                            Inventory playerInv = player.getInventory();
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
+
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
+
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
+
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        player_has_items += playerItem.getAmount();
+                                    }
+                                }
+                            }
+
+                            if (player_has_items == 0){
+                                player.sendMessage("У вас нет этого предмета!");
+                                return;
+                            }
+
+                            int can_be_sold = Math.min(buyRequestNotation.amount_total - buyRequestNotation.amount_now, player_has_items);
+
+                            String msg = localizedStrings.you_sold_item_notification;
+                            msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                            msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
+                            msg = msg.replace("{AMOUNT}", String.valueOf(can_be_sold));
+                            msg = msg.replace("{PRICE}", String.valueOf(buyRequestNotation.price * can_be_sold));
+                            msg = msg.replace("{CURRENCY}", localizedStrings.currency);
+                            player.sendMessage(msg);
+
+                            if (Bukkit.getPlayer(buyRequestNotation.owner).isOnline()){
+                                msg = localizedStrings.buy_request_received;
+                                msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                                msg = msg.replace("{PLAYER}", playerName);
+                                msg = msg.replace("{AMOUNT}", String.valueOf(can_be_sold));
+                                Objects.requireNonNull(Bukkit.getPlayer(buyRequestNotation.owner)).sendMessage(msg);
+                            }
+
+                            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+                            if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                                return;
+                            }
+                            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                            if (rsp == null) {
+                                return;
+                            }
+
+                            rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                            rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price * can_be_sold);
+
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
+
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
+
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
+
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        int d = Math.min(playerItem.getAmount(), can_be_sold);
+                                        can_be_sold -= d;
+                                        buyRequestStorage.updateBuyRequest(unique_key, d);
+                                        playerItem.setAmount(playerItem.getAmount() - d);
+                                        if (can_be_sold == 0) break;
+                                    }
+                                }
+                            }
+                            player.updateInventory();
                         }
                         player.openInventory(generateBuyRequestsMainMenu());
                     }

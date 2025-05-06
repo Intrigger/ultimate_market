@@ -75,6 +75,7 @@ public class LocalizedStrings {
     public String no_items_to_withdraw;
     public String returned_money;
     public String buy_request_created;
+    public String buy_request_received;
     public List<String> buyRequestsButtonLore;
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
@@ -199,6 +200,7 @@ public class LocalizedStrings {
             ));
 
             config.set("strings.wait_before_clicking_again", "&aWait before clicking again!");
+            config.set("strings.buy_request_received", "Recieved buy request {ITEM} x{AMOUNT} from {PLAYER}");
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -355,6 +357,8 @@ public class LocalizedStrings {
         you_took_one_item_from_buy_requests = config.getString("strings.you_took_one_item_from_buy_requests").replaceAll("&", "§");
 
         wait_before_clicking_again = config.getString("strings.wait_before_clicking_again").replaceAll("&", "§");
+
+        buy_request_received = config.getString("strings.buy_request_received").replaceAll("&", "§");
 
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
