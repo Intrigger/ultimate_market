@@ -60,9 +60,8 @@ public class LocalizedStrings {
     public String confirmBuyingButtonTitle;
     public String you_took_one_item_from_buy_requests;
     public List<String> confirmBuyingButtonLore;
-
     public String you_sold_item_notification;
-
+    public String wait_before_clicking_again;
     public String selectAmountMenuTitle;
     public String cancelBuyingButtonTitle;
     public String buyEntirely;
@@ -79,7 +78,9 @@ public class LocalizedStrings {
     public List<String> buyRequestsButtonLore;
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
+
     public ArrayList<String> titles;
+
     public LocalizedStrings(){
 
         if (!new File("plugins/Ultimate Market/localized_strings.yml").exists()){
@@ -196,6 +197,8 @@ public class LocalizedStrings {
                     "Needed: {AMOUNT}",
                     "Price per 1 item: {PRICE}{CURRENCY}"
             ));
+
+            config.set("strings.wait_before_clicking_again", "&aWait before clicking again!");
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -350,6 +353,8 @@ public class LocalizedStrings {
         buy_requests_lore.replaceAll(s -> s.replaceAll("&", "§"));
 
         you_took_one_item_from_buy_requests = config.getString("strings.you_took_one_item_from_buy_requests").replaceAll("&", "§");
+
+        wait_before_clicking_again = config.getString("strings.wait_before_clicking_again").replaceAll("&", "§");
 
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);

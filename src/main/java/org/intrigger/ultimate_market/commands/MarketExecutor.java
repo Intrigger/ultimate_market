@@ -1149,12 +1149,15 @@ public class MarketExecutor implements CommandExecutor  {
         Player player = (Player) commandSender;
         String playerName = player.getName();
 
-        if (player.hasPermission("OmniLegacyEvo.stage.1")){
-            player.sendMessage("У вас нет доступа к данной команде!");
-            player.sendMessage("Чтобы открыть доступ, вам нужен");
-            player.sendMessage("уровень развития 2.");
-            return true;
+        if (Bukkit.getPluginManager().isPluginEnabled("OmniLegacyEvolution")){
+            if (player.hasPermission("OmniLegacyEvo.stage.1") && (!player.isOp())){
+                player.sendMessage("У вас нет доступа к данной команде!");
+                player.sendMessage("Чтобы открыть доступ, вам нужен");
+                player.sendMessage("уровень развития 2.");
+                return true;
+            }
         }
+
 
         if (strings.length == 0){
             playerCurrentMenu.put(playerName, "MAIN_MENU");
@@ -1890,69 +1893,132 @@ public class MarketExecutor implements CommandExecutor  {
                     String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
                     BuyRequestNotation buyRequestNotation = buyRequestStorage.getBuyRequest(unique_key);
 
-                    if (buyRequestNotation.amount_now < buyRequestNotation.amount_total) {
+                    if (clickEvent.isLeftClick() && (!clickEvent.isShiftClick())) {
+                        if (buyRequestNotation.amount_now + 1 <= buyRequestNotation.amount_total) {
+                            Inventory playerInv = player.getInventory();
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
 
-                        Inventory playerInv = player.getInventory();
-                        for (ItemStack playerItem : playerInv.getContents()) {
-                            if (playerItem != null) {
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
 
-                                ItemStack playerItemCopy = playerItem.clone();
-                                ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
-                                playerItemCopyMeta.displayName(LEGACY.deserialize(""));
-                                playerItemCopy.setItemMeta(playerItemCopyMeta);
-                                playerItemCopy.setAmount(1);
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
 
-                                ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
-                                ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
-                                shopItemCopyMeta.displayName(LEGACY.deserialize(""));
-                                shopItemCopy.setItemMeta(shopItemCopyMeta);
-                                shopItemCopy.setAmount(1);
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        playerItem.setAmount(playerItem.getAmount() - 1);
+                                        player.updateInventory();
 
-                                if (playerItemCopy.equals(shopItemCopy)) {
-                                    playerItem.setAmount(playerItem.getAmount() - 1);
-                                    player.updateInventory();
+                                        String msg = localizedStrings.you_sold_item_notification;
+                                        msg = msg.replace("{ITEM}", buyRequestNotation.material);
+                                        msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
+                                        msg = msg.replace("{AMOUNT}", "1");
+                                        msg = msg.replace("{PRICE}", String.valueOf(buyRequestNotation.price));
+                                        msg = msg.replace("{CURRENCY}", localizedStrings.currency);
+                                        player.sendMessage(msg);
 
-                                    String msg = localizedStrings.you_sold_item_notification;
-                                    msg = msg.replace("{ITEM}", buyRequestNotation.material);
-                                    msg = msg.replace("{PLAYER}", buyRequestNotation.owner);
-                                    msg = msg.replace("{AMOUNT}", "1");
-                                    msg = msg.replace("{PRICE}", String.valueOf(buyRequestNotation.price));
-                                    msg = msg.replace("{CURRENCY}", localizedStrings.currency);
-                                    player.sendMessage(msg);
+                                        //player.openInventory(generate_main_menu(player.getName()));
+                                        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
 
-                                    //player.openInventory(generate_main_menu(player.getName()));
-                                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                                        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+                                            return;
+                                        }
+                                        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+                                        if (rsp == null) {
+                                            return;
+                                        }
 
-                                    if (getServer().getPluginManager().getPlugin("Vault") == null) {
-                                        return;
+                                        rsp = getServer().getServicesManager().getRegistration(Economy.class);
+
+                                        rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price);
+
+                                        buyRequestStorage.updateBuyRequest(unique_key, 1);
+
+                                        player.openInventory(generateBuyRequestsMainMenu());
+                                        break;
                                     }
-                                    RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-                                    if (rsp == null) {
-                                        return;
+                                    else {
+                                        //
                                     }
-
-                                    rsp = getServer().getServicesManager().getRegistration(Economy.class);
-
-                                    rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price);
-
-                                    buyRequestStorage.updateBuyRequest(unique_key, 1);
-
-//                                    if (buyRequestNotation.amount_now + 1 >= buyRequestNotation.amount_total) {
-//                                        buyRequestStorage.finishBuyRequest(unique_key);
-//                                    }
-
-                                    player.openInventory(generateBuyRequestsMainMenu());
-
-                                    break;
-                                } else {
-                                    //
                                 }
                             }
                         }
-                    } else {
-                        //buyRequestStorage.finishBuyRequest(unique_key);
+                        else {
+                            //buyRequestStorage.finishBuyRequest(unique_key);
+                            player.openInventory(generateBuyRequestsMainMenu());
+                            player.sendMessage("Данная поставка уже закрыта!");
+                        }
+                    }
+                    else if (clickEvent.isRightClick() && (!clickEvent.isShiftClick())){
+                        int stack_size = new ItemStack(Objects.requireNonNull(Material.getMaterial(buyRequestNotation.material))).getMaxStackSize();
+                        if (buyRequestNotation.amount_now + stack_size <= buyRequestNotation.amount_total){
+                            Inventory playerInv = player.getInventory();
+                            int valid_items_counter = 0;
+
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
+
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
+
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
+
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        valid_items_counter += playerItem.getAmount();
+                                    }
+                                }
+                            }
+
+                            if (valid_items_counter < stack_size){
+                                player.sendMessage("Недостаточно предмета!");
+                                return;
+                            }
+
+                            valid_items_counter = stack_size;
+
+                            for (ItemStack playerItem : playerInv.getContents()) {
+                                if (playerItem != null) {
+
+                                    ItemStack playerItemCopy = playerItem.clone();
+                                    ItemMeta playerItemCopyMeta = playerItemCopy.getItemMeta();
+                                    playerItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    playerItemCopy.setItemMeta(playerItemCopyMeta);
+                                    playerItemCopy.setAmount(1);
+
+                                    ItemStack shopItemCopy = ItemStack.deserializeBytes(buyRequestNotation.bytes);
+                                    ItemMeta shopItemCopyMeta = shopItemCopy.getItemMeta();
+                                    shopItemCopyMeta.displayName(LEGACY.deserialize(""));
+                                    shopItemCopy.setItemMeta(shopItemCopyMeta);
+                                    shopItemCopy.setAmount(1);
+
+                                    if (playerItemCopy.equals(shopItemCopy)) {
+                                        int d = Math.min(valid_items_counter, playerItem.getAmount());
+                                        buyRequestStorage.updateBuyRequest(unique_key, d);
+                                        playerItem.setAmount(playerItem.getAmount() - d);
+                                        valid_items_counter -= d;
+                                        if (valid_items_counter == 0) break;
+                                    }
+                                }
+                            }
+                            player.updateInventory();
+                        }
+                        else{
+                            player.sendMessage("Невозможно сдать ровно 1 стак предмета!");
+                        }
                         player.openInventory(generateBuyRequestsMainMenu());
-                        player.sendMessage("Данная поставка уже закрыта!");
                     }
                 }
                 break;

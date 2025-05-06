@@ -47,7 +47,7 @@ public class ClickHandler implements Listener {
             /* milliseconds */
             long pause = 100;
             if (System.currentTimeMillis() - executor.last_clicked.get(playerName) < pause){
-                Bukkit.getPlayer(playerName).sendMessage("Подождите немного, прежде чем нажать снова!");
+                Bukkit.getPlayer(playerName).sendMessage(executor.localizedStrings.wait_before_clicking_again);
                 executor.last_clicked.put(playerName, System.currentTimeMillis());
                 return;
             }

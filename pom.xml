@@ -35,7 +35,6 @@
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <!-- Replace this with your package! -->
                             <shadedPattern>org.intrigger.ultimate_market</shadedPattern>
                         </relocation>
                     </relocations>
