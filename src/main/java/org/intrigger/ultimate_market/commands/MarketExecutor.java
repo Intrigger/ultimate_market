@@ -1,7 +1,6 @@
 package org.intrigger.ultimate_market.commands;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.apache.commons.lang.math.NumberUtils;
@@ -43,7 +42,9 @@ public class MarketExecutor implements CommandExecutor  {
     public static ItemStorage itemStorage;
     private static BuyRequestStorage buyRequestStorage;
 
-    private static Map<String, Integer> playerCurrentPage;
+    public Map<String, Integer> playerCurrentMarketPage;
+    public Map<String, Integer> playerCurrentBuyRequestsPage;
+    public Map<String, Integer> playerCurrentMyBuyRequestsPage;
     private static Map<String, String> playerCurrentItemFilter;
     public static ItemCategoriesProcessor itemCategoriesProcessor;
 
@@ -55,7 +56,6 @@ public class MarketExecutor implements CommandExecutor  {
     private GroupsPermissions groupsPermissions;
     private Map<String, ItemStackNotation> currentBuyingItem;
     private Map<String, Integer> currentBuyingItemAmount;
-    private Map<String, TextComponent> deserialized_strings;
     public Map<String, Long> last_clicked;
 
     public String mode;
@@ -66,7 +66,9 @@ public class MarketExecutor implements CommandExecutor  {
         plugin = _plugin;
         itemStorage = new ItemStorage("plugins/Ultimate Market/");
         buyRequestStorage = new BuyRequestStorage("plugins/Ultimate Market/");
-        playerCurrentPage = new HashMap<>();
+        playerCurrentMarketPage = new HashMap<>();
+        playerCurrentBuyRequestsPage = new HashMap<>();
+        playerCurrentMyBuyRequestsPage = new HashMap<>();
         itemCategoriesProcessor = new ItemCategoriesProcessor("plugins/Ultimate Market/item_categories.yml");
         playerCurrentItemFilter = new HashMap<>();
         isMarketMenuOpen = new HashMap<>();
@@ -159,9 +161,9 @@ public class MarketExecutor implements CommandExecutor  {
             inventory.setItem(2, buyRequests);
 
 
-        /*
-            Update Page Button
-         */
+            //
+            // UPDATE PAGE
+            //
             ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
             ItemMeta updatePageMeta = updatePage.getItemMeta();
             updatePageMeta.displayName(LEGACY.deserialize(localizedStrings.updatePageButtonTitle).decoration(TextDecoration.ITALIC, false));
@@ -272,8 +274,8 @@ public class MarketExecutor implements CommandExecutor  {
             timestamps_start.put("SQL", System.nanoTime());
 
 
-            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
-            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
+            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentMarketPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentMarketPage.get(playerName), sortingType);
 
             timestamps_stop.put("SQL", System.nanoTime());
 
@@ -488,8 +490,8 @@ public class MarketExecutor implements CommandExecutor  {
             timestamps_start.put("SQL", System.nanoTime());
 
 
-            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentPage.get(playerName), playerCurrentSortingType.get(playerName));
-            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentPage.get(playerName), sortingType);
+            if (filter == null) queryResult = itemStorage.getAllKeys(playerCurrentMarketPage.get(playerName), playerCurrentSortingType.get(playerName));
+            else queryResult = itemStorage.getAllItemsFiltered(itemCategoriesProcessor.filterNotations.get(filter).filters, playerCurrentMarketPage.get(playerName), sortingType);
 
             timestamps_stop.put("SQL", System.nanoTime());
 
@@ -616,7 +618,7 @@ public class MarketExecutor implements CommandExecutor  {
         int inventorySize = 54;
         Inventory inventory = Bukkit.createInventory(null, inventorySize, inventoryName);
 
-        ArrayList<ItemStackNotation> myItems = itemStorage.getPlayerItems(player.getName(), playerCurrentPage.get(player.getName()));
+        ArrayList<ItemStackNotation> myItems = itemStorage.getPlayerItems(player.getName(), playerCurrentMarketPage.get(player.getName()));
 
         ItemStack homeItem = new ItemStack(Material.CHEST);
 
@@ -1024,7 +1026,58 @@ public class MarketExecutor implements CommandExecutor  {
         buyRequests.setItemMeta(buyRequestsMeta);
         myBuyRequestsInventory.setItem(0, buyRequests);
 
-        ArrayList<BuyRequestNotation> myBuyRequests = buyRequestStorage.getAllBuyRequests(playerName);
+        //
+        // UPDATE PAGE
+        //
+        ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+        ItemMeta updatePageMeta = updatePage.getItemMeta();
+        updatePageMeta.displayName(LEGACY.deserialize(localizedStrings.updatePageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.updatePageButtonLore;
+
+        updatePageMeta.lore(des_lore(lore));
+
+
+        pdc = updatePageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+        updatePage.setItemMeta(updatePageMeta);
+        myBuyRequestsInventory.setItem(4, updatePage);
+
+        //
+        // LEFT PAGE
+        //
+        ItemStack leftPage = new ItemStack(Material.PAPER);
+        ItemMeta leftPageMeta = leftPage.getItemMeta();
+        leftPageMeta.displayName(LEGACY.deserialize(localizedStrings.previousPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.previousPageButtonLore;
+
+
+        leftPageMeta.lore(des_lore(lore));
+
+
+        pdc = leftPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+        leftPage.setItemMeta(leftPageMeta);
+        myBuyRequestsInventory.setItem(3, leftPage);
+
+        //
+        // RIGHT PAGE
+        //
+        ItemStack rightPage = new ItemStack(Material.PAPER);
+        ItemMeta rightPageMeta = rightPage.getItemMeta();
+        rightPageMeta.displayName(LEGACY.deserialize(localizedStrings.nextPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.nextPageButtonLore;
+
+        rightPageMeta.lore(des_lore(lore));
+
+        pdc = rightPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+        rightPage.setItemMeta(rightPageMeta);
+        myBuyRequestsInventory.setItem(5, rightPage);
+
+        ArrayList<BuyRequestNotation> myBuyRequests = buyRequestStorage.getAllBuyRequests(playerName, playerCurrentMyBuyRequestsPage.get(playerName));
 
         int currentSlot = 9;
 
@@ -1061,7 +1114,7 @@ public class MarketExecutor implements CommandExecutor  {
         return myBuyRequestsInventory;
     }
 
-    public Inventory generateBuyRequestsMainMenu(){
+    public Inventory generateBuyRequestsMainMenu(String playerName){
         LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
 
         //TODO Сделать локализацию через yml файл
@@ -1101,7 +1154,58 @@ public class MarketExecutor implements CommandExecutor  {
 
         buyRequestsInventory.setItem(2, backToMarket);
 
-        ArrayList<BuyRequestNotation> buyRequests = buyRequestStorage.getAllBuyRequests();
+        //
+        // UPDATE PAGE
+        //
+        ItemStack updatePage = new ItemStack(Material.SLIME_BALL);
+        ItemMeta updatePageMeta = updatePage.getItemMeta();
+        updatePageMeta.displayName(LEGACY.deserialize(localizedStrings.updatePageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.updatePageButtonLore;
+
+        updatePageMeta.lore(des_lore(lore));
+
+
+        pdc = updatePageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "UPDATE_PAGE");
+        updatePage.setItemMeta(updatePageMeta);
+        buyRequestsInventory.setItem(4, updatePage);
+
+        //
+        // LEFT PAGE
+        //
+        ItemStack leftPage = new ItemStack(Material.PAPER);
+        ItemMeta leftPageMeta = leftPage.getItemMeta();
+        leftPageMeta.displayName(LEGACY.deserialize(localizedStrings.previousPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.previousPageButtonLore;
+
+
+        leftPageMeta.lore(des_lore(lore));
+
+
+        pdc = leftPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_LEFT");
+        leftPage.setItemMeta(leftPageMeta);
+        buyRequestsInventory.setItem(3, leftPage);
+
+        //
+        // RIGHT PAGE
+        //
+        ItemStack rightPage = new ItemStack(Material.PAPER);
+        ItemMeta rightPageMeta = rightPage.getItemMeta();
+        rightPageMeta.displayName(LEGACY.deserialize(localizedStrings.nextPageButtonTitle).decoration(TextDecoration.ITALIC, false));
+        lore = localizedStrings.nextPageButtonLore;
+
+        rightPageMeta.lore(des_lore(lore));
+
+        pdc = rightPageMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "PAGE_RIGHT");
+        rightPage.setItemMeta(rightPageMeta);
+        buyRequestsInventory.setItem(5, rightPage);
+
+        ArrayList<BuyRequestNotation> buyRequests = buyRequestStorage.getAllBuyRequests(playerCurrentBuyRequestsPage.get(playerName));
 
         int currentSlot = 9;
 
@@ -1151,9 +1255,7 @@ public class MarketExecutor implements CommandExecutor  {
 
         if (Bukkit.getPluginManager().isPluginEnabled("OmniLegacyEvolution")){
             if (player.hasPermission("OmniLegacyEvo.stage.1") && (!player.isOp())){
-                player.sendMessage("У вас нет доступа к данной команде!");
-                player.sendMessage("Чтобы открыть доступ, вам нужен");
-                player.sendMessage("уровень развития 2.");
+                for (String iter: localizedStrings.low_evo_level) player.sendMessage(iter);
                 return true;
             }
         }
@@ -1161,7 +1263,9 @@ public class MarketExecutor implements CommandExecutor  {
 
         if (strings.length == 0){
             playerCurrentMenu.put(playerName, "MAIN_MENU");
-            playerCurrentPage.put(playerName, 0);
+            playerCurrentMarketPage.put(playerName, 0);
+            playerCurrentBuyRequestsPage.put(playerName, 0);
+            playerCurrentMyBuyRequestsPage.put(playerName, 0);
             playerCurrentSortingType.put(playerName, "NEW_FIRST");
             playerCurrentItemFilter.put(playerName, null);
             isMarketMenuOpen.put(playerName, true);
@@ -1280,7 +1384,7 @@ public class MarketExecutor implements CommandExecutor  {
             }
             else if (strings[0].equalsIgnoreCase("buy")){
                 //TODO Сделать покупку по средней цене на данный товар
-                player.sendMessage("Укажите цену!");
+                for (String iter : localizedStrings.specifyThePrice) player.sendMessage(iter);
             }
         }
         else if (strings.length == 3){
@@ -1292,7 +1396,6 @@ public class MarketExecutor implements CommandExecutor  {
                     }
                     return true;
                 }
-
 
                 if (player.getItemInHand().getTranslationKey().equals("block.minecraft.air")){
                     for (String temp: localizedStrings.theItemToBeSoldMustBeHeldInTheHand){
@@ -1526,24 +1629,24 @@ public class MarketExecutor implements CommandExecutor  {
 
                     int pagesNum = getTotalPages(itemStorage.getTotalItems(filters)) - 1;
 
-                    int currentPage = playerCurrentPage.get(playerName);
+                    int currentPage = playerCurrentMarketPage.get(playerName);
 
                     switch (menu_item_key) {
                         case "MY_SOLD_ITEMS":  // my sold items
                             playerCurrentMenu.put(playerName, "MY_SOLD_ITEMS");
-                            playerCurrentPage.put(playerName, 0);
+                            playerCurrentMarketPage.put(playerName, 0);
                             player.openInventory(generateMySoldItemsMenu(player));
                             break;
                         case "UPDATE_PAGE":
-                            playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
+                            playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
                             player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "PAGE_LEFT":
-                            playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                            playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
                             player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "PAGE_RIGHT":
-                            playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
+                            playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
                             player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                             break;
                         case "CATEGORIES_MENU":
@@ -1591,7 +1694,7 @@ public class MarketExecutor implements CommandExecutor  {
                             break;
                         case "BUY_REQUESTS":
                             playerCurrentMenu.put(playerName, "BUY_REQUESTS");
-                            player.openInventory(generateBuyRequestsMainMenu());
+                            player.openInventory(generateBuyRequestsMainMenu(playerName));
                             break;
                     }
                 } else {
@@ -1663,14 +1766,14 @@ public class MarketExecutor implements CommandExecutor  {
                     }
                     else if (menu_item_key.equals("PAGE_LEFT")){
                         int pagesNum = getTotalPages(itemStorage.playerItemsSoldNow(playerName)) - 1;
-                        int currentPage = playerCurrentPage.get(playerName);
-                        playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                        int currentPage = playerCurrentMarketPage.get(playerName);
+                        playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                     else if (menu_item_key.equals("PAGE_RIGHT")){
                         int pagesNum = getTotalPages(itemStorage.playerItemsSoldNow(playerName)) - 1;
-                        int currentPage = playerCurrentPage.get(playerName);
-                        playerCurrentPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
+                        int currentPage = playerCurrentMarketPage.get(playerName);
+                        playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
                         player.openInventory(generateMySoldItemsMenu(player));
                     }
                 } else {
@@ -1721,7 +1824,7 @@ public class MarketExecutor implements CommandExecutor  {
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
                     } else if (menu_item_key.contains("FILTER:")) {
                         String filterName = menu_item_key.split(":")[1];
-                        playerCurrentPage.put(playerName, 0);
+                        playerCurrentMarketPage.put(playerName, 0);
                         playerCurrentItemFilter.put(playerName, filterName);
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
 
@@ -1881,17 +1984,44 @@ public class MarketExecutor implements CommandExecutor  {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                     assert menu_item_key != null;
 
+                    int currentPage = playerCurrentBuyRequestsPage.get(playerName);
+                    int pagesNum = buyRequestStorage.getPagesNum() - 1;
                     if (menu_item_key.equalsIgnoreCase("MAIN_MENU")) {
                         player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerCurrentSortingType.get(playerName)));
                         playerCurrentMenu.put(playerName, "MAIN_MENU");
-                    } else if (menu_item_key.equalsIgnoreCase("MY_BUY_REQUESTS")) {
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("MY_BUY_REQUESTS")) {
                         player.openInventory(generateMyBuyRequestsMenu(playerName));
                         playerCurrentMenu.put(playerName, "MY_BUY_REQUESTS");
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("UPDATE_PAGE")) {
+                        playerCurrentBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("PAGE_LEFT")) {
+                        playerCurrentBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("PAGE_RIGHT")) {
+                        playerCurrentBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
                     }
                 }
                 else {
                     String unique_key = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "unique_key"), PersistentDataType.STRING);
                     BuyRequestNotation buyRequestNotation = buyRequestStorage.getBuyRequest(unique_key);
+
+                    if (buyRequestNotation == null){
+                        player.sendMessage(localizedStrings.buy_request_is_closed);
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
+                        return;
+                    }
+
+                    if (buyRequestNotation.owner.equals(playerName)){
+                        player.sendMessage(localizedStrings.cannot_sell_to_yourself);
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
+                        return;
+                    }
 
                     if (clickEvent.isLeftClick() && (!clickEvent.isShiftClick())) {
                         if (buyRequestNotation.amount_now + 1 <= buyRequestNotation.amount_total) {
@@ -1920,7 +2050,7 @@ public class MarketExecutor implements CommandExecutor  {
                             }
 
                             if (player_has_items == 0){
-                                player.sendMessage("У вас нет этого предмета!");
+                                player.sendMessage(localizedStrings.you_dont_have_this_item);
                                 return;
                             }
 
@@ -1985,12 +2115,11 @@ public class MarketExecutor implements CommandExecutor  {
                                 }
                             }
                             player.updateInventory();
-                            player.openInventory(generateBuyRequestsMainMenu());
+                            player.openInventory(generateBuyRequestsMainMenu(playerName));
                         }
                         else {
-                            //buyRequestStorage.finishBuyRequest(unique_key);
-                            player.openInventory(generateBuyRequestsMainMenu());
-                            player.sendMessage("Данная поставка уже закрыта!");
+                            player.openInventory(generateBuyRequestsMainMenu(playerName));
+                            player.sendMessage(localizedStrings.buy_request_is_closed);
                         }
                     }
                     else if (clickEvent.isRightClick() && (!clickEvent.isShiftClick())){
@@ -2021,7 +2150,7 @@ public class MarketExecutor implements CommandExecutor  {
                             }
 
                             if (valid_items_counter < stack_size){
-                                player.sendMessage("Недостаточно предмета!");
+                                player.sendMessage(localizedStrings.not_enough_items);
                                 return;
                             }
 
@@ -2083,10 +2212,10 @@ public class MarketExecutor implements CommandExecutor  {
                             }
                         }
                         else{
-                            player.sendMessage("Невозможно сдать ровно 1 стак предмета!");
+                            player.sendMessage(localizedStrings.cannot_sell_one_stack);
                         }
                         player.updateInventory();
-                        player.openInventory(generateBuyRequestsMainMenu());
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
                     }
                     else if (clickEvent.isRightClick()){ //Shift + ПКМ
                         if (buyRequestNotation.amount_now < buyRequestNotation.amount_total){
@@ -2114,7 +2243,7 @@ public class MarketExecutor implements CommandExecutor  {
                             }
 
                             if (player_has_items == 0){
-                                player.sendMessage("У вас нет этого предмета!");
+                                player.sendMessage(localizedStrings.you_dont_have_this_item);
                                 return;
                             }
 
@@ -2176,7 +2305,7 @@ public class MarketExecutor implements CommandExecutor  {
                             }
                             player.updateInventory();
                         }
-                        player.openInventory(generateBuyRequestsMainMenu());
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
                     }
                 }
                 break;
@@ -2187,10 +2316,24 @@ public class MarketExecutor implements CommandExecutor  {
                 if (pdc.has(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING)) {
                     String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
                     assert menu_item_key != null;
+                    int currentPage = playerCurrentMyBuyRequestsPage.get(playerName);
+                    int pagesNum = buyRequestStorage.getPagesNum(playerName) - 1;
 
                     if (menu_item_key.equalsIgnoreCase("BUY_REQUESTS")) {
                         playerCurrentMenu.put(playerName, "BUY_REQUESTS");
-                        player.openInventory(generateBuyRequestsMainMenu());
+                        player.openInventory(generateBuyRequestsMainMenu(playerName));
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("UPDATE_PAGE")) {
+                        playerCurrentMyBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
+                        player.openInventory(generateMyBuyRequestsMenu(playerName));
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("PAGE_LEFT")) {
+                        playerCurrentMyBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage - 1, pagesNum)));
+                        player.openInventory(generateMyBuyRequestsMenu(playerName));
+                    }
+                    else if (menu_item_key.equalsIgnoreCase("PAGE_RIGHT")) {
+                        playerCurrentMyBuyRequestsPage.put(playerName, Math.max(0, Math.min(currentPage + 1, pagesNum)));
+                        player.openInventory(generateMyBuyRequestsMenu(playerName));
                     }
                 }
                 else{
@@ -2323,6 +2466,5 @@ public class MarketExecutor implements CommandExecutor  {
                 break;
             }
         }
-
     }
 }

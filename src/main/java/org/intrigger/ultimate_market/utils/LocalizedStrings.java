@@ -76,9 +76,15 @@ public class LocalizedStrings {
     public String returned_money;
     public String buy_request_created;
     public String buy_request_received;
+    public String you_dont_have_this_item;
+    public String not_enough_items;
+    public String buy_request_is_closed;
+    public String cannot_sell_to_yourself;
+    public String cannot_sell_one_stack;
     public List<String> buyRequestsButtonLore;
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
+    public List<String> low_evo_level;
 
     public ArrayList<String> titles;
 
@@ -201,6 +207,18 @@ public class LocalizedStrings {
 
             config.set("strings.wait_before_clicking_again", "&aWait before clicking again!");
             config.set("strings.buy_request_received", "Recieved buy request {ITEM} x{AMOUNT} from {PLAYER}");
+            config.set("strings.you_dont_have_this_item", "You don't have this item!");
+            config.set("strings.not_enough_items", "Not enough of this item!");
+            config.set("strings.buy_request_is_closed", "Sorry, the Buy Request is already finished!");
+            config.set("strings.cannot_sell_to_yourself", "Sorry, you cannot sell items to yourself!");
+            config.set("strings.cannot_sell_one_stack", "Sorry, you cannot sell exactle 1 stack of this item!");
+
+            config.set("strings.low_evo_level", Arrays.asList(
+                    "Cannot use this command now!",
+                    "To unlock this command you need",
+                    "to reach level 2 in your evolution (use /evo)"
+            ));
+
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -359,6 +377,15 @@ public class LocalizedStrings {
         wait_before_clicking_again = config.getString("strings.wait_before_clicking_again").replaceAll("&", "§");
 
         buy_request_received = config.getString("strings.buy_request_received").replaceAll("&", "§");
+
+        you_dont_have_this_item = config.getString("strings.you_dont_have_this_item").replaceAll("&", "§");
+        not_enough_items = config.getString("strings.not_enough_items").replaceAll("&", "§");
+        buy_request_is_closed = config.getString("strings.buy_request_is_closed").replaceAll("&", "§");
+        cannot_sell_to_yourself = config.getString("strings.cannot_sell_to_yourself").replaceAll("&", "§");
+        cannot_sell_one_stack = config.getString("strings.cannot_sell_one_stack").replaceAll("&", "§");
+
+        low_evo_level = config.getStringList("strings.low_evo_level");
+        low_evo_level.replaceAll(s -> s.replaceAll("&", "§"));
 
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);

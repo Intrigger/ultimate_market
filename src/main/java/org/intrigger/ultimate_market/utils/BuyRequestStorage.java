@@ -134,14 +134,15 @@ public class BuyRequestStorage {
         }
     }
 
-    public ArrayList<BuyRequestNotation> getAllBuyRequests(){
-        String sql = "SELECT * FROM buy_requests;";
+    public ArrayList<BuyRequestNotation> getAllBuyRequests(int page){
+        String sql = "SELECT * FROM buy_requests where amount_now != amount_total limit 45 offset ?;";
 
         ResultSet resultSet;
 
         try {
             PreparedStatement statement;
             statement = conn.prepareStatement(sql);
+            statement.setInt(1, page * 45);
             
             resultSet = statement.executeQuery();
             statement.closeOnCompletion();
@@ -168,8 +169,8 @@ public class BuyRequestStorage {
         }
         return null;
     }
-    public ArrayList<BuyRequestNotation> getAllBuyRequests(String playerName){
-        String sql = "SELECT * FROM buy_requests where owner = ?;";
+    public ArrayList<BuyRequestNotation> getAllBuyRequests(String playerName, int page){
+        String sql = "SELECT * FROM buy_requests where owner = ? limit 45 offset ?;";
 
         ResultSet resultSet;
 
@@ -177,6 +178,7 @@ public class BuyRequestStorage {
             PreparedStatement statement;
             statement = conn.prepareStatement(sql);
             statement.setString(1, playerName);
+            statement.setInt(2, page * 45);
 
             resultSet = statement.executeQuery();
             statement.closeOnCompletion();
@@ -202,6 +204,53 @@ public class BuyRequestStorage {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public int getPagesNum(){
+        String sql = "SELECT count() FROM buy_requests WHERE amount_now != amount_total;";
+
+        ResultSet resultSet;
+
+        int result = 0;
+        try {
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql);
+
+            resultSet = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            while (resultSet.next()){
+                result = resultSet.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (int) Math.ceil(result / 45.0);
+    }
+
+    public int getPagesNum(String playerName){
+        String sql = "SELECT count() FROM buy_requests WHERE owner = ?;";
+
+        ResultSet resultSet;
+
+        int result = 0;
+        try {
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql);
+            statement.setString(1, playerName);
+
+            resultSet = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            while (resultSet.next()){
+                result = resultSet.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (int) Math.ceil(result / 45.0);
     }
 
     public void updateAmountTaken(String unique_key, int amount_taken){
