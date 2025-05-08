@@ -81,6 +81,7 @@ public class LocalizedStrings {
     public String buy_request_is_closed;
     public String cannot_sell_to_yourself;
     public String cannot_sell_one_stack;
+    public String wrong_item_amount_specified;
     public List<String> buyRequestsButtonLore;
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
@@ -212,6 +213,7 @@ public class LocalizedStrings {
             config.set("strings.buy_request_is_closed", "Sorry, the Buy Request is already finished!");
             config.set("strings.cannot_sell_to_yourself", "Sorry, you cannot sell items to yourself!");
             config.set("strings.cannot_sell_one_stack", "Sorry, you cannot sell exactle 1 stack of this item!");
+            config.set("strings.wrong_item_amount_specified", "Sorry, you specified the wrong amount!");
 
             config.set("strings.low_evo_level", Arrays.asList(
                     "Cannot use this command now!",
@@ -383,6 +385,7 @@ public class LocalizedStrings {
         buy_request_is_closed = config.getString("strings.buy_request_is_closed").replaceAll("&", "§");
         cannot_sell_to_yourself = config.getString("strings.cannot_sell_to_yourself").replaceAll("&", "§");
         cannot_sell_one_stack = config.getString("strings.cannot_sell_one_stack").replaceAll("&", "§");
+        wrong_item_amount_specified = config.getString("strings.wrong_item_amount_specified").replaceAll("&", "§");
 
         low_evo_level = config.getStringList("strings.low_evo_level");
         low_evo_level.replaceAll(s -> s.replaceAll("&", "§"));

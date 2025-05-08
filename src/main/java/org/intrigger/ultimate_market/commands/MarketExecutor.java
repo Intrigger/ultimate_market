@@ -1104,6 +1104,7 @@ public class MarketExecutor implements CommandExecutor  {
             pdc.set(namespacedKey, PersistentDataType.STRING, requestNotation.key);
 
             request_meta.lore(des_lore(lore));
+            request_meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             request.setItemMeta(request_meta);
 
             myBuyRequestsInventory.setItem(currentSlot, request);
@@ -1231,6 +1232,7 @@ public class MarketExecutor implements CommandExecutor  {
             pdc.set(namespacedKey, PersistentDataType.STRING, requestNotation.key);
 
             request_meta.lore(des_lore(lore));
+            request_meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             request.setItemMeta(request_meta);
 
             buyRequestsInventory.setItem(currentSlot, request);
@@ -1260,7 +1262,6 @@ public class MarketExecutor implements CommandExecutor  {
             }
         }
 
-
         if (strings.length == 0){
             playerCurrentMenu.put(playerName, "MAIN_MENU");
             playerCurrentMarketPage.put(playerName, 0);
@@ -1270,15 +1271,21 @@ public class MarketExecutor implements CommandExecutor  {
             playerCurrentItemFilter.put(playerName, null);
             isMarketMenuOpen.put(playerName, true);
             player.openInventory(generateMainMenu(playerName, null, playerCurrentSortingType.get(playerName)));
-        } else if (strings.length == 1) {
+        }
+        else if (strings.length == 1) {
             if (!MarketTabComplete.list.get(0).contains(strings[0])){
                 for (String temp: localizedStrings.wrongCommandUsage){
                     player.sendMessage(temp);
                 }
             }
             else{
-                for (String temp: localizedStrings.specifyThePrice){
-                    player.sendMessage(temp);
+                if (strings[0].equalsIgnoreCase("sell")){
+                    for (String temp: localizedStrings.specifyThePrice){
+                        player.sendMessage(temp);
+                    }
+                }
+                else if (strings[0].equalsIgnoreCase("buy")){
+                    player.sendMessage(localizedStrings.wrong_item_amount_specified);
                 }
             }
         }
@@ -1299,6 +1306,11 @@ public class MarketExecutor implements CommandExecutor  {
 
                 for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
                     priceStrCopy = priceStrCopy.replaceAll(el, "");
+                }
+
+                if (!priceStrCopy.matches("-?\\d+")){
+                    for (String x: localizedStrings.incorrectPrice) player.sendMessage(x);
+                    return true;
                 }
 
                 priceDouble = Double.parseDouble(priceStrCopy);
@@ -1384,6 +1396,20 @@ public class MarketExecutor implements CommandExecutor  {
             }
             else if (strings[0].equalsIgnoreCase("buy")){
                 //TODO Сделать покупку по средней цене на данный товар
+                String amountStr = strings[1];
+
+                if (!amountStr.matches("\\d+")){
+                    player.sendMessage(localizedStrings.wrong_item_amount_specified);
+                    return true;
+                }
+
+                int amount = Integer.parseInt(amountStr);
+
+                if (amount <= 0){
+                    player.sendMessage(localizedStrings.wrong_item_amount_specified);
+                    return true;
+                }
+
                 for (String iter : localizedStrings.specifyThePrice) player.sendMessage(iter);
             }
         }
@@ -1411,6 +1437,12 @@ public class MarketExecutor implements CommandExecutor  {
                 for (String el : Arrays.asList("k", "K", "kk", "KK", "m", "M", "kkk", "b", "KKK", "B")){
                     priceStrCopy = priceStrCopy.replaceAll(el, "");
                 }
+
+                if (!priceStrCopy.matches("-?\\d+")){
+                    for (String x: localizedStrings.incorrectPrice) player.sendMessage(x);
+                    return true;
+                }
+
 
                 priceDouble = Double.parseDouble(priceStrCopy);
 
@@ -1461,7 +1493,6 @@ public class MarketExecutor implements CommandExecutor  {
                         break;
                     }
                 }
-
 
                 if (itemStorage.playerItemsSoldNow(playerName) >= groupsPermissions.maxItemsToSell.get(playerGroup)){
                     player.sendMessage(localizedStrings.itemSoldLimitReached);
@@ -1515,12 +1546,22 @@ public class MarketExecutor implements CommandExecutor  {
                 String amount_str = strings[1];
                 String price_str = strings[2];
                 
-                if (!NumberUtils.isNumber(amount_str)){
+                if (!price_str.matches("-?\\d+")){
                     for (String x: localizedStrings.incorrectPrice) player.sendMessage(x);
                     return true;
                 }
-                else if (Integer.parseInt(amount_str) < 0){
+                if (Integer.parseInt(price_str) < 0){
                     for (String x: localizedStrings.negativePrice) player.sendMessage(x);
+                    return true;
+                }
+
+                if (!amount_str.matches("-?\\d+")){
+                    player.sendMessage(localizedStrings.wrong_item_amount_specified);
+                    return true;
+                }
+
+                if (!(Integer.parseInt(amount_str) > 0)){
+                    player.sendMessage(localizedStrings.wrong_item_amount_specified);
                     return true;
                 }
 
@@ -2103,10 +2144,6 @@ public class MarketExecutor implements CommandExecutor  {
                                         rsp.getProvider().depositPlayer(playerName, buyRequestNotation.price);
 
                                         buyRequestStorage.updateBuyRequest(unique_key, 1);
-
-                                        if (Bukkit.getPlayer(buyRequestNotation.owner).isOnline())
-                                            Bukkit.getPlayer(buyRequestNotation.owner).sendMessage("Поставка получена: " + buyRequestNotation.material + " x1");
-
                                         break;
                                     }
                                     else {
