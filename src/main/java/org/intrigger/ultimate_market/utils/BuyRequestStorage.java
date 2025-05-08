@@ -206,6 +206,90 @@ public class BuyRequestStorage {
         return null;
     }
 
+    public ArrayList<BuyRequestNotation> getAllBuyRequestsSorted(String sortingType, int page){
+
+        String order_by_what = "TIME", asc_or_desc = "DESC";
+        switch (sortingType){
+            case "NEW_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "DESC";
+                break;
+            case "OLD_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "ASC";
+                break;
+            case "CHEAP_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "ASC";
+                break;
+            case "EXPENSIVE_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "DESC";
+                break;
+        }
+
+        String sql = "SELECT * FROM buy_requests order by " + order_by_what + " " + asc_or_desc + " limit 45 offset ?;";
+
+        ResultSet resultSet;
+
+        try {
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql);
+
+            statement.setInt(1, page * 45);
+
+            resultSet = statement.executeQuery();
+            statement.closeOnCompletion();
+
+
+            ArrayList<BuyRequestNotation> buyRequests = new ArrayList<>();
+
+            while (resultSet.next()){
+                buyRequests.add(new BuyRequestNotation(
+                        resultSet.getString("key"),
+                        resultSet.getLong("time"),
+                        resultSet.getString("owner"),
+                        resultSet.getDouble("price"),
+                        resultSet.getString("material"),
+                        resultSet.getBytes("bytes"),
+                        resultSet.getInt("amount_now"),
+                        resultSet.getInt("amount_taken"),
+                        resultSet.getInt("amount_total")
+                ));
+            }
+            return buyRequests;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public int getAllBuyRequests(String playerName){
+        String sql = "SELECT count() FROM buy_requests where owner = ?;";
+
+        ResultSet resultSet;
+
+        int result = 0;
+
+        try {
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql);
+            statement.setString(1, playerName);
+
+            resultSet = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            while (resultSet.next()){
+                result = resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
     public int getPagesNum(){
         String sql = "SELECT count() FROM buy_requests WHERE amount_now != amount_total;";
 

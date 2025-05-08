@@ -82,6 +82,7 @@ public class LocalizedStrings {
     public String cannot_sell_to_yourself;
     public String cannot_sell_one_stack;
     public String wrong_item_amount_specified;
+    public String buy_requests_limit_reached;
     public List<String> buyRequestsButtonLore;
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
@@ -214,12 +215,14 @@ public class LocalizedStrings {
             config.set("strings.cannot_sell_to_yourself", "Sorry, you cannot sell items to yourself!");
             config.set("strings.cannot_sell_one_stack", "Sorry, you cannot sell exactle 1 stack of this item!");
             config.set("strings.wrong_item_amount_specified", "Sorry, you specified the wrong amount!");
+            config.set("strings.buy_requests_limit_reached", "You have reached the limit of your Buy Requests!");
 
             config.set("strings.low_evo_level", Arrays.asList(
                     "Cannot use this command now!",
                     "To unlock this command you need",
                     "to reach level 2 in your evolution (use /evo)"
             ));
+
 
 
             try{
@@ -333,6 +336,7 @@ public class LocalizedStrings {
         sortingTypeButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
 
         itemSoldLimitReached = config.getString("strings.items_sold_limit_reached").replaceAll("&", "§");
+        buy_requests_limit_reached = config.getString("strings.buy_requests_limit_reached").replaceAll("&", "§");
 
         confirmBuyingButtonTitle = config.getString("strings.confirm_buying_button.title").replaceAll("&", "§");
         confirmBuyingButtonLore =  config.getStringList("strings.confirm_buying_button.lore");
@@ -386,6 +390,7 @@ public class LocalizedStrings {
         cannot_sell_to_yourself = config.getString("strings.cannot_sell_to_yourself").replaceAll("&", "§");
         cannot_sell_one_stack = config.getString("strings.cannot_sell_one_stack").replaceAll("&", "§");
         wrong_item_amount_specified = config.getString("strings.wrong_item_amount_specified").replaceAll("&", "§");
+        buy_requests_limit_reached = config.getString("strings.buy_requests_limit_reached").replaceAll("&", "§");
 
         low_evo_level = config.getStringList("strings.low_evo_level");
         low_evo_level.replaceAll(s -> s.replaceAll("&", "§"));
