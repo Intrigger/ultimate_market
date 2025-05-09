@@ -10,6 +10,7 @@ import java.util.Map;
 public class GroupsPermissions {
     public Map<String, Integer> maxItemsToSell;
     public Map<String, Integer> maxBuyRequests;
+    public Map<String, Integer> maxBuyAmount;
     public GroupsPermissions(){
 
         maxItemsToSell = new HashMap<>();
@@ -40,7 +41,8 @@ public class GroupsPermissions {
 
         groups = new ArrayList<>(configuration.getConfigurationSection("buy").getKeys(false));
         for (String group: groups){
-            maxBuyRequests.put(group, configuration.getConfigurationSection("buy").getInt(group));
+            maxBuyRequests.put(group, configuration.getInt("buy." + group + ".requests"));
+            maxBuyAmount.put(group, configuration.getInt("buy." + group + ".amount"));
         }
     }
 }
