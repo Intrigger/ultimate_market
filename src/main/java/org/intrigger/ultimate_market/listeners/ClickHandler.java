@@ -32,7 +32,7 @@ public class ClickHandler implements Listener {
         boolean contains = false;
 
         for (String s: executor.localizedStrings.titles){
-            if (s.equals(inventoryName) || (ChatColor.stripColor(inventoryName).equals(ChatColor.stripColor(s)))){
+            if (s.startsWith(inventoryName) || (ChatColor.stripColor(inventoryName).startsWith(ChatColor.stripColor(s)))){
                 contains = true;
                 break;
             }

@@ -14,10 +14,13 @@ public class ItemCategoriesProcessor {
 
     YamlConfiguration configuration;
 
-    ArrayList<String> titles;
+    public ArrayList<String> titles;
     public Map<String, ItemFilterNotation> filterNotations = new HashMap<>();
+    public Map<String, String> display_names;
 
     public ItemCategoriesProcessor(String configFilename){
+
+        display_names = new HashMap<>();
 
         if (!new File(configFilename).exists()){
             generateItemCategoriesYML(configFilename);
@@ -36,6 +39,7 @@ public class ItemCategoriesProcessor {
 
             assert material != null;
             filterNotations.put(title, new ItemFilterNotation(title, name, new ArrayList<>(), slot, filters, Material.getMaterial(material)));
+            display_names.put(title, name);
         }
 
         for (Map.Entry<String, ItemFilterNotation> notation: filterNotations.entrySet()){

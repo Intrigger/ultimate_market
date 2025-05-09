@@ -59,7 +59,7 @@ public class MarketExecutor implements CommandExecutor  {
     private Map<String, ItemStackNotation> currentBuyingItem;
     private Map<String, Integer> currentBuyingItemAmount;
     public Map<String, Long> last_clicked;
-
+    public LegacyComponentSerializer LEGACY;
     public String mode;
 
     public MarketExecutor(Plugin _plugin){
@@ -82,6 +82,7 @@ public class MarketExecutor implements CommandExecutor  {
         currentBuyingItemAmount = new HashMap<>();
         last_clicked = new HashMap<>();
         mode = "LEGACY";
+        LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
     }
 
 
@@ -111,12 +112,16 @@ public class MarketExecutor implements CommandExecutor  {
         String MODE = mode; //"LEGACY" (4 ms total) OR DEPRECATED (8 ms total)
 
         if (MODE.equals("LEGACY")){
-            LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacy(LegacyComponentSerializer.SECTION_CHAR);
+
 
             int inventorySize = 54;
 
             //Inventory inventory = Bukkit.createInventory(null, inventorySize, Component.text(localizedStrings.mainMenuTitle));
-            Inventory inventory = Bukkit.createInventory(null, inventorySize, LEGACY.deserialize(localizedStrings.mainMenuTitle));
+            Inventory inventory = Bukkit.createInventory(null,
+                    inventorySize, LEGACY.deserialize(
+                            localizedStrings.mainMenuTitle +
+                            ((playerCurrentItemFilter.get(playerName) == null) ? "" :
+                            ": " + itemCategoriesProcessor.display_names.get(playerCurrentItemFilter.get(playerName)))));
 
             /*
                 My Auction Slots Page Button
@@ -217,6 +222,23 @@ public class MarketExecutor implements CommandExecutor  {
             inventory.setItem(8, categoriesPage);
 
             //
+            // Tip Button
+            //
+
+            ItemStack tipButton = new ItemStack(Material.WRITABLE_BOOK);
+            ItemMeta tipButtonMeta = tipButton.getItemMeta();
+            tipButtonMeta.displayName(LEGACY.deserialize(localizedStrings.tipButtonTitle).decoration(TextDecoration.ITALIC, false));
+            lore = localizedStrings.tipButtonLore;
+            tipButtonMeta.lore(des_lore(lore));
+
+            pdc = tipButtonMeta.getPersistentDataContainer();
+            namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+            pdc.set(namespacedKey, PersistentDataType.STRING, "HELP_MENU");
+            tipButton.setItemMeta(tipButtonMeta);
+            inventory.setItem(1, tipButton);
+
+
+            //
             // SORTING BUTTON
             //
             ItemStack sortingButton = new ItemStack(Material.HOPPER);
@@ -226,16 +248,16 @@ public class MarketExecutor implements CommandExecutor  {
 
             switch (playerItemSortingType.get(playerName)){
                 case "NEW_FIRST":
-                    lore.set(0, "✓ " + localizedStrings.sortingTypeButtonLore.get(0));
+                    lore.set(0, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(0));
                     break;
                 case "OLD_FIRST":
-                    lore.set(1, "✓ " + localizedStrings.sortingTypeButtonLore.get(1));
+                    lore.set(1, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(1));
                     break;
                 case "CHEAP_FIRST":
-                    lore.set(2, "✓ " + localizedStrings.sortingTypeButtonLore.get(2));
+                    lore.set(2, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(2));
                     break;
                 case "EXPENSIVE_FIRST":
-                    lore.set(3, "✓ " + localizedStrings.sortingTypeButtonLore.get(3));
+                    lore.set(3, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(3));
                     break;
             }
 
@@ -514,24 +536,54 @@ public class MarketExecutor implements CommandExecutor  {
 
             menus.put("MAIN_MENU", inventory);
 
-            timestamps_stop.put("generateMainMenu()", System.nanoTime());
-
-
-            try{
-                FileWriter fileWriter = new FileWriter("UltimateMarketTimings.txt", true);
-                PrintWriter printWriter = new PrintWriter(fileWriter);
-
-                for (Map.Entry<String, Long> entry: timestamps_stop.entrySet()){
-                    printWriter.println(entry.getKey() + ":\t" + (timestamps_stop.get(entry.getKey()) - timestamps_start.get(entry.getKey())) / 1_000_000.0f);
-                }
-                printWriter.close();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
             return inventory;
         }
 
+    }
+
+    public Inventory generateHelpMenu(){
+        Inventory inventory = Bukkit.createInventory(null, 54, LEGACY.deserialize(localizedStrings.help_menu_title));
+
+        ArrayList<Material> materials = new ArrayList<>(Arrays.asList(Material.BOOK, Material.WRITABLE_BOOK, Material.BOOKSHELF, Material.LECTERN));
+        ArrayList<String> buttons_titles = new ArrayList<>(Arrays.asList(localizedStrings.help_menu_button_1,
+                localizedStrings.help_menu_button_2, localizedStrings.help_menu_button_3, localizedStrings.help_menu_button_4));
+
+        ArrayList<List<String>> buttons_lores = new ArrayList<>(Arrays.asList(localizedStrings.help_menu_lore_1,
+                localizedStrings.help_menu_lore_2, localizedStrings.help_menu_lore_3, localizedStrings.help_menu_lore_4));
+
+        ArrayList<Integer> places = new ArrayList<>(Arrays.asList(19, 21, 23, 25));
+
+        for (int i = 0; i < 4; i++){
+            ItemStack currentButton = new ItemStack(materials.get(i));
+            ItemMeta currentButtonMeta = currentButton.getItemMeta();
+            currentButtonMeta.displayName(LEGACY.deserialize(buttons_titles.get(i)).decoration(TextDecoration.ITALIC, false));
+            currentButtonMeta.lore(des_lore(buttons_lores.get(i)));
+            currentButtonMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            currentButton.setItemMeta(currentButtonMeta);
+
+            inventory.setItem(places.get(i), currentButton);
+        }
+
+        /*
+         * Кнопка "Назад в магазин"
+         */
+
+        ItemStack backToMarket = new ItemStack(Material.CHEST);
+        ItemMeta backToMarketMeta = backToMarket.getItemMeta();
+        backToMarketMeta.displayName(LEGACY.deserialize(localizedStrings.backToMainMenuButtonTitle).decoration(TextDecoration.ITALIC, false));
+        backToMarketMeta.lore(des_lore(localizedStrings.backToMainMenuButtonLore));
+
+        PersistentDataContainer pdc;
+        NamespacedKey namespacedKey;
+
+        pdc = backToMarketMeta.getPersistentDataContainer();
+        namespacedKey = new NamespacedKey(plugin, "menu_item_key");
+        pdc.set(namespacedKey, PersistentDataType.STRING, "MAIN_MENU");
+        backToMarket.setItemMeta(backToMarketMeta);
+
+        inventory.setItem(0, backToMarket);
+
+        return inventory;
     }
 
     //TODO Оптимизировать данную функцию по аналогии с генерацией основного меню
@@ -1189,16 +1241,16 @@ public class MarketExecutor implements CommandExecutor  {
         lore = new ArrayList<>(localizedStrings.sortingTypeButtonLore);
         switch (playerBuyRequestsSortingType.get(playerName)){
             case "NEW_FIRST":
-                lore.set(0, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(0));
+                lore.set(0, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(0));
                 break;
             case "OLD_FIRST":
-                lore.set(1, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(1));
+                lore.set(1, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(1));
                 break;
             case "CHEAP_FIRST":
-                lore.set(2, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(2));
+                lore.set(2, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(2));
                 break;
             case "EXPENSIVE_FIRST":
-                lore.set(3, "§6✓ "+ localizedStrings.sortingTypeButtonLore.get(3));
+                lore.set(3, localizedStrings.dash + localizedStrings.sortingTypeButtonLore.get(3));
                 break;
         }
 
@@ -1697,6 +1749,10 @@ public class MarketExecutor implements CommandExecutor  {
                             playerCurrentMenu.put(playerName, "MY_SOLD_ITEMS");
                             playerCurrentMarketPage.put(playerName, 0);
                             player.openInventory(generateMySoldItemsMenu(player));
+                            break;
+                        case "HELP_MENU":
+                            playerCurrentMenu.put(playerName, "HELP_MENU");
+                            player.openInventory(generateHelpMenu());
                             break;
                         case "UPDATE_PAGE":
                             playerCurrentMarketPage.put(playerName, Math.max(0, Math.min(currentPage, pagesNum)));
@@ -2541,6 +2597,18 @@ public class MarketExecutor implements CommandExecutor  {
                         }
                     }
                 }
+                break;
+            }
+            case "HELP_MENU":{
+                PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                String menu_item_key = pdc.get(new NamespacedKey(plugin, "menu_item_key"), PersistentDataType.STRING);
+                if (menu_item_key == null) return;
+
+                if (menu_item_key.equalsIgnoreCase("MAIN_MENU")) {
+                    player.openInventory(generateMainMenu(playerName, playerCurrentItemFilter.get(playerName), playerItemSortingType.get(playerName)));
+                    playerCurrentMenu.put(playerName, "MAIN_MENU");
+                }
+
                 break;
             }
         }

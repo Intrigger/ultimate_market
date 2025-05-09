@@ -16,7 +16,9 @@ public class LocalizedStrings {
     public String myMarketButtonTitle;
     public String buyRequestsMenuTitle;
     public String myBuyRequestsMenuTitle;
+    public String tipButtonTitle;
     public List<String> myMarketButtonLore;
+    public List<String> tipButtonLore;
 
     public String updatePageButtonTitle;
     public List<String> updatePageButtonLore;
@@ -87,7 +89,17 @@ public class LocalizedStrings {
     public List<String> my_buy_requests_lore;
     public List<String> buy_requests_lore;
     public List<String> low_evo_level;
+    public String help_menu_title;
+    public String help_menu_button_1;
+    public String help_menu_button_2;
+    public String help_menu_button_3;
+    public String help_menu_button_4;
+    public String dash;
 
+    public List<String> help_menu_lore_1;
+    public List<String> help_menu_lore_2;
+    public List<String> help_menu_lore_3;
+    public List<String> help_menu_lore_4;
     public ArrayList<String> titles;
 
     public LocalizedStrings(){
@@ -104,6 +116,7 @@ public class LocalizedStrings {
             config.set("titles.select_amount_menu", "&2&lSelect Amount");
             config.set("titles.buy_requests_menu", "&2&lBuy Requests");
             config.set("titles.my_buy_requests_menu", "&2&lMuy Buy Requests");
+            config.set("titles.help_menu_title", "Help");
 
             config.set("strings.my_market_button.title",   "&6My Market"  );
             config.set("strings.my_market_button.lore", Arrays.asList(  "&aPress to see"  ,   "&ayour sold items"  ));
@@ -223,7 +236,12 @@ public class LocalizedStrings {
                     "to reach level 2 in your evolution (use /evo)"
             ));
 
-
+            config.set("strings.tip_button_title", "Tip");
+            config.set("strings.help_menu_button_1", "1");
+            config.set("strings.help_menu_button_2", "2");
+            config.set("strings.help_menu_button_3", "3");
+            config.set("strings.help_menu_button_4", "4");
+            config.set("strings.dash", "-->");
 
             try{
                 config.save("plugins/Ultimate Market/localized_strings.yml");
@@ -395,6 +413,34 @@ public class LocalizedStrings {
         low_evo_level = config.getStringList("strings.low_evo_level");
         low_evo_level.replaceAll(s -> s.replaceAll("&", "§"));
 
+        tipButtonTitle = config.getString("strings.tip_button_title");
+
+
+        tipButtonLore = config.getStringList("strings.tip_button_lore");
+        tipButtonLore.replaceAll(s -> s.replaceAll("&", "§"));
+
+        help_menu_title = config.getString("titles.help_menu_title").replaceAll("&", "§");
+
+        help_menu_button_1 = config.getString("strings.help_menu_button_1").replaceAll("&", "§");
+        help_menu_button_2 = config.getString("strings.help_menu_button_2").replaceAll("&", "§");
+        help_menu_button_3 = config.getString("strings.help_menu_button_3").replaceAll("&", "§");
+        help_menu_button_4 = config.getString("strings.help_menu_button_4").replaceAll("&", "§");
+
+        help_menu_lore_1 = config.getStringList("strings.help_menu_lore_1");
+        help_menu_lore_1.replaceAll(s -> s.replaceAll("&", "§"));
+
+        help_menu_lore_2 = config.getStringList("strings.help_menu_lore_2");
+        help_menu_lore_2.replaceAll(s -> s.replaceAll("&", "§"));
+
+        help_menu_lore_3 = config.getStringList("strings.help_menu_lore_3");
+        help_menu_lore_3.replaceAll(s -> s.replaceAll("&", "§"));
+
+        help_menu_lore_4 = config.getStringList("strings.help_menu_lore_4");
+        help_menu_lore_4.replaceAll(s -> s.replaceAll("&", "§"));
+
+        dash = config.getString("strings.dash").replaceAll("&", "§");
+
+
         titles = new ArrayList<>();
         titles.add(itemCategoriesTitle);
         titles.add(mainMenuTitle);
@@ -403,5 +449,6 @@ public class LocalizedStrings {
         titles.add(selectAmountMenuTitle);
         titles.add(buyRequestsMenuTitle);
         titles.add(myBuyRequestsMenuTitle);
+        titles.add(help_menu_title);
     }
 }
