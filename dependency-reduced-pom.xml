@@ -4,7 +4,7 @@
   <groupId>org.intrigger</groupId>
   <artifactId>ultimate_market</artifactId>
   <name>ultimate_market</name>
-  <version>0.7.0</version>
+  <version>0.8.0</version>
   <build>
     <resources>
       <resource>

@@ -18,4 +18,9 @@ public class ItemStackNotation {
         amount = _amount;
         full = _full;
     }
+
+    @Override
+    public String toString() {
+        return "Key: " + key + "\tOwner: " + owner + "\tPrice:" + price + "\tTime: " + time + "\tFull: " + full + "\tAmount: " + amount;
+    }
 }

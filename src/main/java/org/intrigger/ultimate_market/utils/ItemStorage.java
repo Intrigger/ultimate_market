@@ -1,7 +1,5 @@
 package org.intrigger.ultimate_market.utils;
 
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -30,7 +28,7 @@ public class ItemStorage {
 
     public void createParser() {
         try {
-            conn = DriverManager.getConnection("jdbc:sqlite:" + storageFilePath + "db.db");
+            conn = DriverManager.getConnection("jdbc:sqlite:" + storageFilePath);
             Statement statement = conn.createStatement();
 
             String sql = "CREATE TABLE IF NOT EXISTS items (" +
@@ -49,8 +47,6 @@ public class ItemStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's ITEMS table was Created Successfully!");
     }
 
     public void addItem(String key, String ownerName, double price, long time, String material, ItemStack item, int amount, int full){
@@ -101,20 +97,33 @@ public class ItemStorage {
                     result.getInt("amount"),
                     result.getInt("full"));
 
+            return resultNotation;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return resultNotation;
+        return null;
     }
 
-    public void setAmount(String key, int amount, byte[] bytes){
-        String sql = "UPDATE items SET amount = ?, bytes = ? WHERE key = ?";
+    public void setAmount(String key, int amount){
+        String sql = "UPDATE items SET amount = ? WHERE key = ?";
         try {
 
             PreparedStatement statement = conn.prepareStatement(sql);
             statement.setInt(1, amount);
-            statement.setBytes(2, bytes);
-            statement.setString(3, key);
+            statement.setString(2, key);
+            statement.execute();
+            statement.closeOnCompletion();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void changeAmountBy(String key, int difference){
+        String sql = "UPDATE items SET amount = amount + ? WHERE key = ?";
+        try {
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setInt(1, difference);
+            statement.setString(2, key);
             statement.execute();
             statement.closeOnCompletion();
         } catch (SQLException e) {
@@ -300,7 +309,7 @@ public class ItemStorage {
             e.printStackTrace();
         }
     }
-    public int getTotalItems(ArrayList<String> filters){
+    public int getTotalPages(ArrayList<String> filters){
         String sql;
         if (filters == null) sql = "SELECT COUNT() FROM items;";
         else {
@@ -319,7 +328,25 @@ public class ItemStorage {
             result.next();
             statement.closeOnCompletion();
 
-            return result.getInt(1);
+            return (int) (Math.ceil(result.getInt(1) / 45.0) - 1);
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getMyShopTotalPages(String playerName){
+        String sql = "SELECT COUNT() FROM items where owner = ?;";
+        try{
+            PreparedStatement statement = conn.prepareStatement(sql);
+            statement.setString(1, playerName);
+            ResultSet result = statement.executeQuery();
+
+            result.next();
+            statement.closeOnCompletion();
+
+            return (int) (Math.ceil(result.getInt(1) / 45.0) - 1);
 
         } catch (SQLException e){
             e.printStackTrace();
@@ -356,7 +383,7 @@ public class ItemStorage {
 
         sql += "material = " + "\"" + filters.get(filters.size() - 1) + "\"";
 
-        sql += "ORDER BY " + order_by_what + " " + asc_or_desc;
+        sql += "ORDER BY " + order_by_what + " " + asc_or_desc + " LIMIT 45 OFFSET " + (page * 45);
 
         try{
             PreparedStatement statement = conn.prepareStatement(sql);
@@ -366,9 +393,6 @@ public class ItemStorage {
             ArrayList<ItemStackNotation> itemsToReturn = new ArrayList<>();
 
 
-            for (int i = 0; i < (page * 45); i++){
-                result.next();
-            }
 
             for (int i = 0; i < 45; i++){
                 if (!result.next()) break;

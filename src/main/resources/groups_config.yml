@@ -1,11 +1,11 @@
 sell:
-    default: 5
-    any_other_group_here: 10
-    admin: 2147483647
+  default: 5
+  any_other_group_here: 10
+  admin: 2147483647
 buy:
-    default:
-        requests: 2
-        amount: 576
-    admin:
-        requests: 2281337
-        amount: 288000
+  default:
+    requests: 2
+    amount: 576
+  admin:
+    requests: 2281337
+    amount: 288000

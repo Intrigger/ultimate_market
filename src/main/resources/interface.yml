@@ -1,0 +1,366 @@
+# READ THIS BEFORE CHANGING ANYTHING HERE
+# 1. DO NOT CHANGE THE NUMBER OF STRINGS IN ANY LORE
+# E.G. IF LORE HAS 5 STRINGS, IT MUST ALWAYS HAVE 5 STRINGS!
+# 2. YOU CAN ONLY CHANGE STRINGS THAT ARE INSIDE SINGLE QUOTES
+# 3. COLORS SHOULD BE USED ONLY THIS WAY: <#ABCDEF>SOME TEXT HERE</#ABCDEF>
+# IT WILL ONLY WORK WITH OPENING COLOR TAG AND CLOSING COLOR TAG
+# 4. REPLACE INTERFACE.YML WITH THIS FILE IF YOU WANT TO CHANGE THE LANGUAGE
+menus:
+  main_menu:
+    title: '<#3E3E3E>Market</#3E3E3E>'
+    buttons:
+      my_shop:
+        title: '<#B6FF8E>My Market</#B6FF8E>'
+        lore:
+        - '<#525252>Click to see</#525252>'
+        - '<#525252>your goods</#525252>'
+      tips_menu:
+        title: '<#B6FF8E>Tips</#B6FF8E>'
+        lore:
+        - '<#525252>Click for</#525252>'
+        - '<#525252>auction tips</#525252>'
+      buy_requests:
+        title: '<#B6FF8E>Requests</#B6FF8E>'
+        lore:
+        - '<#525252>Click to open</#525252>'
+        - '<#525252>Requests menu</#525252>'
+      update_page:
+        title: '<#B6FF8E>Update</#B6FF8E>'
+        lore:
+        - '<#525252>Click to update</#525252>'
+        - '<#525252>current page</#525252>'
+      page_left:
+        title: '<#B6FF8E>Page left</#B6FF8E>'
+        lore:
+        - '<#525252>Click to go</#525252>'
+        - '<#525252>one page left</#525252>'
+      page_right:
+        title: '<#B6FF8E>Page right</#B6FF8E>'
+        lore:
+        - '<#525252>Click to go</#525252>'
+        - '<#525252>one page right</#525252>'
+      categories:
+        title: '<#B6FF8E>Goods Categories</#B6FF8E>'
+        lore:
+        - '<#525252>Click to select</#525252>'
+        - '<#525252>the category you want</#525252>'
+      sorting:
+        title: '<#B6FF8E>Sorting</#B6FF8E>'
+        lore:
+        - '<#525252>New first</#525252>'
+        - '<#525252>Cheap first</#525252>'
+        - '<#525252>Old first</#525252>'
+        - '<#525252>Expensive first</#525252>'
+      goods:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Seller: </#B6FF8E><#FFFFFF>{SELLER}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price per one: </#B6FF8E><#FFFFFF>{PRICE_PER_ONE}{CURRENCY}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>LMB - buy partly</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>RMB - buy all</#B6FF8E>'
+        - ''
+  my_shop:
+    title: '<#3E3E3E>My Goods</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+        - '<#525252>Click to go</#525252>'
+        - '<#525252>back to main menu</#525252>'
+      update_page:
+        title: '<#B6FF8E>Update</#B6FF8E>'
+        lore:
+          - '<#525252>Click to update</#525252>'
+          - '<#525252>current page</#525252>'
+      page_left:
+        title: '<#B6FF8E>Page left</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page left</#525252>'
+      page_right:
+        title: '<#B6FF8E>Page right</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page right</#525252>'
+      goods:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price per one: </#B6FF8E><#FFFFFF>{PRICE_PER_ONE}{CURRENCY}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>LMB - remove from sale</#B6FF8E>'
+        - ''
+  tips_menu:
+    title: '<#3E3E3E>Auction Tips</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>back to main menu</#525252>'
+      button1:
+        title: ''
+        lore:
+          - ' <#FFCC00>- Where am I?</#FFCC00> '
+          - ' <#A0A0A0>- You’re at the auction, buddy! '
+          - ' <#FFCC00>- What is it for?</#FFCC00> '
+          - ' <#A0A0A0>- Here people buy and sell items! '
+          - ''
+      button2:
+        title: ''
+        lore:
+          - ' <#FFCC00>- Okay... how do I sell?</#FFCC00> '
+          - ' <#A0A0A0>- It’s simple: hold the item</#A0A0A0> '
+          - ' <#A0A0A0>and use the command <#32CD32>/ah sell</#32CD32> <#FFFFFF><price></#FFFFFF>.</#A0A0A0> '
+          - ' <#A0A0A0>We also have a "Supplies" section</#A0A0A0> '
+          - ' <#A0A0A0>where you can sell items too</#A0A0A0> '
+          - ''
+      button3:
+        title: ''
+        lore:
+          - ' <#FFCC00>- Alright, how do I buy then?.. </#FFCC00> '
+          - ' <#A0A0A0>- In the auction main menu, choose</#A0A0A0> '
+          - ' <#A0A0A0>the item you want and click it.</#A0A0A0> '
+          - ' <#A0A0A0>And of course, through <#32CD32>Supplies</#32CD32> too!</#A0A0A0> '
+          - ''
+      button4:
+        title: ''
+        lore:
+          - ' <#FFCC00>- Okay, how do I use them?</#FFCC00> '
+          - ' <#A0A0A0>- If you want to quickly</#A0A0A0> '
+          - ' <#A0A0A0>sell something, go to the</#A0A0A0> '
+          - ' <#A0A0A0><#ffffff>"Supplies"</#ffffff> section and pick the item</#A0A0A0> '
+          - ' <#A0A0A0>you want to sell instantly.</#A0A0A0> '
+          - ''
+      button5:
+        title: ''
+        lore:
+          - ' <#FFCC00>- And what if I want to buy?</#FFCC00> '
+          - ' <#A0A0A0>- Take the desired item</#A0A0A0> '
+          - ' <#A0A0A0>in your hand and use</#A0A0A0> '
+          - ' <#A0A0A0>the command <#32CD32>/ah buy</#32CD32> <#FFFFFF><amount></#FFFFFF> <#FFFFFF><price></#FFFFFF>.</#A0A0A0> '
+          - ' <#A0A0A0>- After that, players will</#A0A0A0> '
+          - ' <#A0A0A0>be able to sell items to you.</#A0A0A0> '
+  buy_requests:
+    title: '<#3E3E3E>Requests</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>back to main menu</#525252>'
+      update_page:
+        title: '<#B6FF8E>Update</#B6FF8E>'
+        lore:
+          - '<#525252>Click to update</#525252>'
+          - '<#525252>current page</#525252>'
+      page_left:
+        title: '<#B6FF8E>Page left</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page left</#525252>'
+      page_right:
+        title: '<#B6FF8E>Page right</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page right</#525252>'
+      my_buy_requests:
+        title: '<#B6FF8E>My Requests</#B6FF8E>'
+        lore:
+        - '<#525252>Click to see</#525252>'
+        - '<#525252>your requests</#525252>'
+      request:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Amount: <#FFFFFF>{AMOUNT}</#FFFFFF> pcs.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Buyer: </#B6FF8E><#FFFFFF>{BUYER}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>LMB </#B6FF8E><#FFFFFF>sell 1 item</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>RMB </#B6FF8E><#FFFFFF>sell 1 stack</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>SHIFT + RMB </#B6FF8E><#FFFFFF>sell all</#FFFFFF>'
+        - ''
+      sorting:
+        title: '<#B6FF8E>Sorting</#B6FF8E>'
+        lore:
+          - '<#525252>New first</#525252>'
+          - '<#525252>Cheap first</#525252>'
+          - '<#525252>Old first</#525252>'
+          - '<#525252>Expensive first</#525252>'
+      categories:
+        title: '<#B6FF8E>Goods Categories</#B6FF8E>'
+        lore:
+          - '<#525252>Click to select</#525252>'
+          - '<#525252>the category you want</#525252>'
+  categories:
+    title: '<#3E3E3E>Item Categories</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+          - '<#525252>Click to</#525252>'
+          - '<#525252>go back and</#525252>'
+          - '<#525252><#FFCC00>reset filters</#FFCC00></#525252>'
+  confirm_full_menu:
+    title: '<#3E3E3E>Confirm</#3E3E3E>'
+    buttons:
+      green:
+        title: '<#B6FF8E>Confirm</#B6FF8E>'
+        lore:
+        - '<#525252>Click to confirm</#525252>'
+        - '<#525252>purchase</#525252>'
+      red:
+        title: '<#B6FF8E>Cancel</#B6FF8E>'
+        lore:
+        - '<#525252>Click to cancel</#525252>'
+        - '<#525252>purchase</#525252>'
+      gray:
+        title: ''
+        lore:
+        - ''
+      the_item:
+        title: ''
+        lore:
+        - '<#B6FF8E>Price: </#B6FF8E><#FFFFFF>{PRICE}</#FFFFFF>'
+  select_amount_menu:
+    title: '<#3E3E3E>Select the amount</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>back to main menu</#525252>'
+      confirm:
+        title: '<#B6FF8E>Confirm</#B6FF8E>'
+        lore:
+        - '<#525252>Click to confirm</#525252>'
+        - '<#525252>purchase</#525252>'
+  my_buy_requests:
+    title: '<#3E3E3E>My Requests</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>back to main menu</#525252>'
+      update_page:
+        title: '<#B6FF8E>Update</#B6FF8E>'
+        lore:
+          - '<#525252>Click to update</#525252>'
+          - '<#525252>current page</#525252>'
+      page_left:
+        title: '<#B6FF8E>Page left</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page left</#525252>'
+      page_right:
+        title: '<#B6FF8E>Page right</#B6FF8E>'
+        lore:
+          - '<#525252>Click to go</#525252>'
+          - '<#525252>one page right</#525252>'
+      buy_requests:
+        title: '<#B6FF8E>Requests</#B6FF8E>'
+        lore:
+          - '<#525252>Click to open</#525252>'
+          - '<#525252>Requests menu</#525252>'
+      request:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Items bought: <#FFFFFF>{AMOUNT_NOW}</#FFFFFF> / <#FFFFFF>{AMOUNT_TOTAL}</#FFFFFF> pcs.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Can be taken: <#FFFFFF>{AVAILABLE}</#FFFFFF> pcs.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Price per one: </#B6FF8E><#FFFFFF>{PRICE}</#FFFFFF>{CURRENCY}'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>LMB </#B6FF8E><#FFFFFF>take 1 item</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>RMB </#B6FF8E><#FFFFFF>take 1 stack</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>SHIFT + RMB </#B6FF8E><#FFFFFF>take all</#FFFFFF>'
+        - ''
+  buy_requests_categories:
+    title: '<#3E3E3E>Item Categories</#3E3E3E>'
+    buttons:
+      buy_requests:
+        title: '<#B6FF8E>Back</#B6FF8E>'
+        lore:
+        - '<#525252>Click to</#525252>'
+        - '<#525252>return back and</#525252>'
+        - '<#525252><#FFCC00>reset filters</#FFCC00></#525252>'
+messages:
+  incorrect_input:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Incorrect arguments entered!</#D32F2F>'
+  wrong_command_usage:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Wrong command usage!</#D32F2F>'
+  specify_the_price:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Please specify a price!</#D32F2F>'
+  wrong_item_amount_specified:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You specified an incorrect item amount!</#D32F2F>'
+  the_item_to_be_sold_must_be_held_in_your_hand:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Hold the item you want to sell in your hand!</#D32F2F>'
+  the_item_to_be_bought_must_be_held_in_your_hand:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Hold the item for the supply in your hand!</#D32F2F>'
+  incorrect_price:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You entered an incorrect price!</#D32F2F>'
+  negative_price:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You entered a negative price! This is not allowed!</#D32F2F>'
+  items_sold_limit_reached:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You have reached the limit for selling items simultaneously!</#D32F2F>'
+  successful_putting_up:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You have successfully put the item up for sale!</#2ECC71>'
+  zero_price_notice:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You set a price of zero:</#2ECC71>'
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You will not make any profit from this item!</#2ECC71>'
+  buy_requests_limit_reached:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You have reached the limit for buy requests!</#D32F2F>'
+  cannot_request_that_many_items:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>The specified amount exceeds your supply limit!</#D32F2F>'
+  not_enough_money_buy_requests:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You do not have enough funds for a buy request!</#D32F2F>'
+  not_enough_money_to_buy:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You do not have enough funds to buy!</#D32F2F>'
+  successful_creating_of_buy_request:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You have successfully created a buy request!</#2ECC71>'
+  item_already_sold:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>This item has already been sold!</#D32F2F>'
+  free_up_your_inventory_space:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Free up space in your inventory first!</#D32F2F>'
+  item_was_bought_notification_seller:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>Player <#FFFFFF>{PLAYER}</#FFFFFF> bought <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> from you for <#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF></#2ECC71>'
+  item_was_bought_notification_buyer:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You bought <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> from player <#FFFFFF>{PLAYER}</#FFFFFF> for <#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF></#2ECC71>'
+  buy_request_is_closed:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>This buy request has already been completed!</#D32F2F>'
+  cannot_sell_to_yourself:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You cannot sell an item to yourself!</#D32F2F>'
+  cannot_buy_your_goods:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You cannot buy your own goods!</#D32F2F>'
+  you_dont_have_this_item:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You do not have this item!</#D32F2F>'
+  buy_requests_item_was_sold_seller:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You successfully sold <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> to player <#FFFFFF>{BUYER}</#FFFFFF> and received <#FFFFFF>{MONEY}{CURRENCY}</#FFFFFF></#2ECC71>'
+  buy_requests_item_was_sold_buyer:
+    - '<#2ECC71>Player <#FFFFFF>{SELLER}</#FFFFFF> placed <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> for you (buy request)</#2ECC71>'
+  you_have_withdrawn_item:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You have successfully withdrawn the item from sale!</#2ECC71>'
+  you_dont_have_stack_of_this_item:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You do not have a full stack of this item!</#D32F2F>'
+  cannot_sell_one_stack:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You cannot sell a full stack of this item!</#D32F2F>'
+  currency_symbol:
+    - '<#B6FF00>$</#B6FF00>'
+  dash:
+    - '<#FFC311>→ </#FFC311>'
+  no_items_to_withdraw:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>You have nothing to withdraw from buy requests!</#D32F2F>'
+  you_took_one_item_from_buy_requests:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You took <#FFFFFF>1</#FFFFFF> item from the buy request</#2ECC71>'
+  returned_money:
+    - '<#FFD700>▶ </#FFD700><#2ECC71>You closed the buy request! You have been refunded: <#FFFFFF>{MONEY}</#FFFFFF>{CURRENCY}</#2ECC71>'
+  command_can_be_only_used_by_player:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>This command can only be used by a player!</#D32F2F>'
+  omni_legacy_evo_low_level:
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Reach level 2 in evolution.</#D32F2F>'
+    - '<#FFD700>▶ </#FFD700><#D32F2F>Use <#FFFFFF>/evo</#FFFFFF> to learn more</#D32F2F>'

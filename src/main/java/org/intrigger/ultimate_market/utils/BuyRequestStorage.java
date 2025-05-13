@@ -2,16 +2,18 @@ package org.intrigger.ultimate_market.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.commands.MarketExecutor;
 import java.sql.*;
 import java.util.ArrayList;
+
+import static org.intrigger.ultimate_market.Ultimate_market.itemCategoriesProcessor;
 
 public class BuyRequestStorage {
     String storageFilePath;
     Connection conn;
 
-    public BuyRequestStorage(String _storageFilePath) {
-        storageFilePath = _storageFilePath;
+    public BuyRequestStorage() {
         conn = null;
         createParser();
     }
@@ -26,7 +28,7 @@ public class BuyRequestStorage {
 
     public void createParser() {
         try {
-            conn = MarketExecutor.itemStorage.conn;
+            conn = Ultimate_market.itemStorage.conn;
             Statement statement = conn.createStatement();
 
             String sql = "CREATE TABLE IF NOT EXISTS buy_requests (" +
@@ -47,8 +49,6 @@ public class BuyRequestStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        Bukkit.getLogger().info(ChatColor.GREEN + "Ultimate Market's BUY_REQUESTS table was Created Successfully!");
     }
 
     public void addRequest(BuyRequestNotation buyRequest){
@@ -134,15 +134,42 @@ public class BuyRequestStorage {
         }
     }
 
-    public ArrayList<BuyRequestNotation> getAllBuyRequests(int page){
-        String sql = "SELECT * FROM buy_requests where amount_now != amount_total limit 45 offset ?;";
+    public ArrayList<BuyRequestNotation> getAllBuyRequestsFiltered(ArrayList<String> filters, int page, String sortingType){
+        String order_by_what = "TIME", asc_or_desc = "DESC";
+        switch (sortingType){
+            case "NEW_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "DESC";
+                break;
+            case "OLD_FIRST":
+                order_by_what = "TIME";
+                asc_or_desc = "ASC";
+                break;
+            case "CHEAP_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "ASC";
+                break;
+            case "EXPENSIVE_FIRST":
+                order_by_what = "PRICE";
+                asc_or_desc = "DESC";
+                break;
+        }
+
+        String sql = "SELECT * FROM buy_requests WHERE amount_now != amount_total and ";
+
+        for (int i = 0; i < filters.size() - 1; i++){
+            sql += "material = " + "\"" + filters.get(i) + "\"" + " OR ";
+        }
+
+        sql += "material = " + "\"" + filters.get(filters.size() - 1) + "\"";
+
+        sql += "ORDER BY " + order_by_what + " " + asc_or_desc + " LIMIT 45 OFFSET " + (page * 45);
 
         ResultSet resultSet;
 
         try {
             PreparedStatement statement;
             statement = conn.prepareStatement(sql);
-            statement.setInt(1, page * 45);
             
             resultSet = statement.executeQuery();
             statement.closeOnCompletion();
@@ -310,7 +337,39 @@ public class BuyRequestStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return (int) Math.ceil(result / 45.0);
+        return (int) (Math.ceil(result / 45.0) - 1);
+    }
+
+    public int getPagesNumFiltered(String filter){
+
+        if (filter == null) return getPagesNum();
+
+        StringBuilder sql = new StringBuilder("SELECT count() FROM buy_requests WHERE amount_now != amount_total and ");
+
+        for (int i = 0; i < itemCategoriesProcessor.filterNotations.get(filter).filters.size() - 1; i++){
+            sql.append("material = " + "\"").append(itemCategoriesProcessor.filterNotations.get(filter).filters.get(i)).append("\"").append(" OR ");
+        }
+
+        sql.append("material = " + "\"").append(itemCategoriesProcessor.filterNotations.get(filter).filters.get(itemCategoriesProcessor.filterNotations.get(filter).filters.size() - 1)).append("\";");
+
+        ResultSet resultSet;
+
+        int result = 0;
+        try {
+            PreparedStatement statement;
+            statement = conn.prepareStatement(sql.toString());
+
+            resultSet = statement.executeQuery();
+            statement.closeOnCompletion();
+
+            while (resultSet.next()){
+                result = resultSet.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (int) (Math.ceil(result / 45.0) - 1);
     }
 
     public int getPagesNum(String playerName){
@@ -334,7 +393,7 @@ public class BuyRequestStorage {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return (int) Math.ceil(result / 45.0);
+        return (int) (Math.ceil(result / 45.0) - 1);
     }
 
     public void updateAmountTaken(String unique_key, int amount_taken){

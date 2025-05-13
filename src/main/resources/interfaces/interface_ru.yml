@@ -1,0 +1,366 @@
+# READ THIS BEFORE CHANGING ANYTHING HERE
+# 1. DO NOT CHANGE THE NUMBER OF STRINGS IN ANY LORE
+# E.G. IF LORE HAS 5 STRINGS, IT MUST ALWAYS HAVE 5 STRINGS!
+# 2. YOU CAN ONLY CHANGE STRINGS THAT ARE INSIDE SINGLE QUOTES
+# 3. COLORS SHOULD BE USED ONLY THIS WAY: <#ABCDEF>SOME TEXT HERE</#ABCDEF>
+# IT WILL ONLY WORK WITH OPENING COLOR TAG AND CLOSING COLOR TAG
+menus:
+  main_menu:
+    title: '<#3E3E3E>Аукцион</#3E3E3E>'
+    buttons:
+      my_shop:
+        title: '<#B6FF8E>Мой Аукцион</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы увидеть</#525252>'
+        - '<#525252>Ваши товары</#525252>'
+      tips_menu:
+        title: '<#B6FF8E>Подсказка</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы увидеть</#525252>'
+        - '<#525252>подсказу по Аукциону</#525252>'
+      buy_requests:
+        title: '<#B6FF8E>Поставки</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы открыть</#525252>'
+        - '<#525252>меню поставок</#525252>'
+      update_page:
+        title: '<#B6FF8E>Обновить страницу</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы обновить</#525252>'
+        - '<#525252>текущую страницу</#525252>'
+      page_left:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу назад</#525252>'
+      page_right:
+        title: '<#B6FF8E>Вперёд</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу вперёд</#525252>'
+      categories:
+        title: '<#B6FF8E>Категории товаров</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы выбрать</#525252>'
+        - '<#525252>интересующую тебя категорию</#525252>'
+      sorting:
+        title: '<#B6FF8E>Сортировка</#B6FF8E>'
+        lore:
+        - '<#525252>Сначала новое</#525252>'
+        - '<#525252>Сначала дешевое</#525252>'
+        - '<#525252>Сначала старое</#525252>'
+        - '<#525252>Сначала дорогое</#525252>'
+      goods:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Продавец: </#B6FF8E><#FFFFFF>{SELLER}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена за шт.: </#B6FF8E><#FFFFFF>{PRICE_PER_ONE}{CURRENCY}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ЛКМ - купить частями</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ПКМ - купить целиком</#B6FF8E>'
+        - ''
+  my_shop:
+    title: '<#3E3E3E>Мои Товары</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад</#525252>'
+      update_page:
+        title: '<#B6FF8E>Обновить страницу</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы обновить</#525252>'
+        - '<#525252>текущую страницу</#525252>'
+      page_left:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу назад</#525252>'
+      page_right:
+        title: '<#B6FF8E>Вперёд</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу вперёд</#525252>'
+      goods:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена за шт.: </#B6FF8E><#FFFFFF>{PRICE_PER_ONE}{CURRENCY}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ЛКМ - снять с продажи</#B6FF8E>'
+        - ''
+  tips_menu:
+    title: '<#3E3E3E>Помощь по аукциону</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад</#525252>'
+      button1:
+        title: ''
+        lore:
+        - ' <#FFCC00>- Куда я попал?</#FFCC00> '
+        - ' <#A0A0A0>- Ты попал на аукцион, дружище! '
+        - ' <#FFCC00>- И зачем он нужен?</#FFCC00> '
+        - ' <#A0A0A0>- Здесь люди покупают и продают товары! '
+        - ''
+      button2:
+        title: ''
+        lore:
+        - ' <#FFCC00>- Ну.. хорошо.. а как продавать?</#FFCC00> '
+        - ' <#A0A0A0>- Все просто: возьми предмет в руку</#A0A0A0> '
+        - ' <#A0A0A0>и используй команду <#32CD32>/ah sell</#32CD32> <#FFFFFF><цена></#FFFFFF>.</#A0A0A0> '
+        - ' <#A0A0A0>А ещё у нас есть раздел "Поставки",</#A0A0A0> '
+        - ' <#A0A0A0>там тоже можно продавать товары</#A0A0A0> '
+        - ''
+      button3:
+        title: ''
+        lore:
+        - ' <#FFCC00>- Ладно, а как покупать?.. </#FFCC00> '
+        - ' <#A0A0A0>- В главном меню аукциона выбери</#A0A0A0> '
+        - ' <#A0A0A0>нужный товар и нажми на него.</#A0A0A0> '
+        - ' <#A0A0A0>Ну и, конечно же, через <#32CD32>поставки</#32CD32>!</#A0A0A0> '
+        - ''
+      button4:
+        title: ''
+        lore:
+        - ' <#FFCC00>- Окей, как ими пользоваться?</#FFCC00> '
+        - ' <#A0A0A0>- Если хочешь что-то быстро</#A0A0A0> '
+        - ' <#A0A0A0>продать, то зайди в раздел</#A0A0A0> '
+        - ' <#A0A0A0><#ffffff>"Поставки"</#ffffff> и выбери тот товар,</#A0A0A0> '
+        - ' <#A0A0A0>который хочешь сразу продать.</#A0A0A0> '
+        - ''
+      button5:
+        title: ''
+        lore:
+        - ' <#FFCC00>- А если хочу что-то купить?</#FFCC00> '
+        - ' <#A0A0A0>- А для этого возьми желаемый</#A0A0A0> '
+        - ' <#A0A0A0>предмет в руку и используй</#A0A0A0> '
+        - ' <#A0A0A0>команду <#32CD32>/ah buy</#32CD32> <#FFFFFF><количество></#FFFFFF> <#FFFFFF><цена></#FFFFFF>.</#A0A0A0> '
+        - ' <#A0A0A0>- После этого игроки смогут</#A0A0A0> '
+        - ' <#A0A0A0>начать продавать тебе товары.</#A0A0A0> '
+        - ''
+  buy_requests:
+    title: '<#3E3E3E>Поставки</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад</#525252>'
+      update_page:
+        title: '<#B6FF8E>Обновить страницу</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы обновить</#525252>'
+        - '<#525252>текущую страницу</#525252>'
+      page_left:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу назад</#525252>'
+      page_right:
+        title: '<#B6FF8E>Вперёд</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу вперёд</#525252>'
+      my_buy_requests:
+        title: '<#B6FF8E>Мои Поставки</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы увидеть</#525252>'
+        - '<#525252>Ваши поставки</#525252>'
+      request:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Количество: <#FFFFFF>{AMOUNT}</#FFFFFF> шт.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена: </#B6FF8E><#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Покупатель: </#B6FF8E><#FFFFFF>{BUYER}</#FFFFFF>'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ЛКМ </#B6FF8E><#FFFFFF>продать 1 шт.</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ПКМ </#B6FF8E><#FFFFFF>продать 1 стак</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>SHIFT + ПКМ </#B6FF8E><#FFFFFF>продать всё</#FFFFFF>'
+        - ''
+      sorting:
+        title: '<#B6FF8E>Сортировка</#B6FF8E>'
+        lore:
+        - '<#525252>Сначала новое</#525252>'
+        - '<#525252>Сначала дешевое</#525252>'
+        - '<#525252>Сначала старое</#525252>'
+        - '<#525252>Сначала дорогое</#525252>'
+      categories:
+        title: '<#B6FF8E>Категории товаров</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы выбрать</#525252>'
+        - '<#525252>интересующую тебя категорию</#525252>'
+  categories:
+    title: '<#3E3E3E>Категории товаров</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад и</#525252>'
+        - '<#525252><#FFCC00>сбросить фильтры</#FFCC00></#525252>'
+  confirm_full_menu:
+    title: '<#3E3E3E>Подтверждение покупки</#3E3E3E>'
+    buttons:
+      green:
+        title: '<#B6FF8E>Подтвердить</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>подтвердить покупку</#525252>'
+      red:
+        title: '<#B6FF8E>Отменить</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>отменить покупку</#525252>'
+      gray:
+        title: ''
+        lore:
+        - ''
+      the_item:
+        title: ''
+        lore:
+        - '<#B6FF8E>Цена: </#B6FF8E><#FFFFFF>{PRICE}</#FFFFFF>'
+  select_amount_menu:
+    title: '<#3E3E3E>Выберите количество</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад</#525252>'
+      confirm:
+        title: '<#B6FF8E>Подтвердить</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>подтвердить покупку</#525252>'
+  my_buy_requests:
+    title: '<#3E3E3E>Мои Поставки</#3E3E3E>'
+    buttons:
+      main_menu:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад</#525252>'
+      update_page:
+        title: '<#B6FF8E>Обновить страницу</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы обновить</#525252>'
+        - '<#525252>текущую страницу</#525252>'
+      page_left:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу назад</#525252>'
+      page_right:
+        title: '<#B6FF8E>Вперёд</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы перейти</#525252>'
+        - '<#525252>на страницу вперёд</#525252>'
+      buy_requests:
+        title: '<#B6FF8E>Поставки</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы открыть</#525252>'
+        - '<#525252>меню поставок</#525252>'
+      request:
+        title: ''
+        lore:
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Собрано товара: <#FFFFFF>{AMOUNT_NOW}</#FFFFFF> / <#FFFFFF>{AMOUNT_TOTAL}</#FFFFFF> шт.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Можно забрать: <#FFFFFF>{AVAILABLE}</#FFFFFF> шт.</#B6FF8E>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>Цена за шт.: </#B6FF8E><#FFFFFF>{PRICE}</#FFFFFF>{CURRENCY}'
+        - ''
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ЛКМ </#B6FF8E><#FFFFFF>забрать 1 шт.</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>ПКМ </#B6FF8E><#FFFFFF>забрать 1 стак</#FFFFFF>'
+        - '<#FFD700>▶ </#FFD700><#B6FF8E>SHIFT + ПКМ </#B6FF8E><#FFFFFF>забрать всё</#FFFFFF>'
+        - ''
+  buy_requests_categories:
+    title: '<#3E3E3E>Категории товаров</#3E3E3E>'
+    buttons:
+      buy_requests:
+        title: '<#B6FF8E>Назад</#B6FF8E>'
+        lore:
+        - '<#525252>Нажмите, чтобы</#525252>'
+        - '<#525252>вернуться назад и</#525252>'
+        - '<#525252><#FFCC00>сбросить фильтры</#FFCC00></#525252>'
+messages:
+  incorrect_input:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Неверно введены аргументы!</#D32F2F>'
+  wrong_command_usage:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Неверное использование команды!</#D32F2F>'
+  specify_the_price:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Укажите цену!</#D32F2F>'
+  wrong_item_amount_specified:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вы указали неверное количество предмета!</#D32F2F>'
+  the_item_to_be_sold_must_be_held_in_your_hand:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Держите предмет для продажи в руке!</#D32F2F>'
+  the_item_to_be_bought_must_be_held_in_your_hand:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Держите предмет для создания Поставки в руке!</#D32F2F>'
+  incorrect_price:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вы указали некорректную цену!</#D32F2F>'
+  negative_price:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вы указали отрицательную цену! Так нельзя!</#D32F2F>'
+  items_sold_limit_reached:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вы достигли лимита на одновременную продажу предметов!</#D32F2F>'
+  successful_putting_up:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы успешно выставили предмет на продажу!</#2ECC71>'
+  zero_price_notice:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы указали нулевую цену:</#2ECC71>'
+  - '<#FFD700>▶ </#FFD700><#2ECC71>вы не получите прибыль с товара!</#2ECC71>'
+  buy_requests_limit_reached:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вы достигли лимита на одновременное количество поставок!</#D32F2F>'
+  cannot_request_that_many_items:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Указанное количество превышает ваш лимит на поставку!</#D32F2F>'
+  not_enough_money_buy_requests:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>У вас недостаточно средств для создания Поставки!</#D32F2F>'
+  not_enough_money_to_buy:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>У вас недостаточно средств для покупки!</#D32F2F>'
+  successful_creating_of_buy_request:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы успешно создали Поставку!</#2ECC71>'
+  item_already_sold:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Данный товар уже продан!</#D32F2F>'
+  free_up_your_inventory_space:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Сначала освободите место в инвентаре!</#D32F2F>'
+  item_was_bought_notification_seller:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Игрок <#FFFFFF>{PLAYER}</#FFFFFF> купил у вас <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> за <#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF></#2ECC71>'
+  item_was_bought_notification_buyer:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы купили <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> у игрока <#FFFFFF>{PLAYER}</#FFFFFF> за <#FFFFFF>{PRICE}{CURRENCY}</#FFFFFF></#2ECC71>'
+  buy_request_is_closed:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Данная поставка уже завершена!</#D32F2F>'
+  cannot_sell_to_yourself:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Нельзя продать товар самому себе!</#D32F2F>'
+  cannot_buy_your_goods:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Нельзя купить товар у самого себя!</#D32F2F>'
+  you_dont_have_this_item:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>У вас нет этого товара!</#D32F2F>'
+  buy_requests_item_was_sold_seller:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы успешно продали <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> игроку <#FFFFFF>{BUYER}</#FFFFFF> и получили <#FFFFFF>{MONEY}{CURRENCY}</#FFFFFF></#2ECC71>'
+  buy_requests_item_was_sold_buyer:
+  - '<#2ECC71>Игрок <#FFFFFF>{SELLER}</#FFFFFF> поставил вам <#FFFFFF>{ITEM} x{AMOUNT}</#FFFFFF> (поставки)</#2ECC71>'
+  you_have_withdrawn_item:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы успешно сняли предмет с продажи!</#2ECC71>'
+  you_dont_have_stack_of_this_item:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>У вас нет целого стака этого предмета!</#D32F2F>'
+  cannot_sell_one_stack:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Невозможно поставить целый стак этого предмета!</#D32F2F>'
+  currency_symbol:
+  - '<#B6FF00>$</#B6FF00>'
+  dash:
+  - '<#FFC311>→ </#FFC311>'
+  no_items_to_withdraw:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Вам пока что нечего забрать из поставок!</#D32F2F>'
+  you_took_one_item_from_buy_requests:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы забрали <#FFFFFF>1</#FFFFFF> предмет из Поставки</#2ECC71>'
+  returned_money:
+  - '<#FFD700>▶ </#FFD700><#2ECC71>Вы закрыли поставку! Вам возвращено: <#FFFFFF>{MONEY}</#FFFFFF>{CURRENCY}</#2ECC71>'
+  command_can_be_only_used_by_player:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Команда может быть использована только игроком!</#D32F2F>'
+  omni_legacy_evo_low_level:
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Достигни уровня 2 в развитии.</#D32F2F>'
+  - '<#FFD700>▶ </#FFD700><#D32F2F>Используй <#FFFFFF>/evo</#FFFFFF>, чтобы узнать больше</#D32F2F>'
