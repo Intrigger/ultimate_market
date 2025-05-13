@@ -1,16 +1,12 @@
 package org.intrigger.ultimate_market.utils;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.intrigger.ultimate_market.Ultimate_market;
-import org.intrigger.ultimate_market.commands.MarketExecutor;
 import java.sql.*;
 import java.util.ArrayList;
 
 import static org.intrigger.ultimate_market.Ultimate_market.itemCategoriesProcessor;
 
 public class BuyRequestStorage {
-    String storageFilePath;
     Connection conn;
 
     public BuyRequestStorage() {

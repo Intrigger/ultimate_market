@@ -35,20 +35,6 @@ public class MarketTabComplete implements TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
 
-
-//        int argsN = strings.length;
-//
-//        String lastString = strings[argsN - 1];
-//
-//        List<String> completion = new ArrayList<>();
-//
-//        if (argsN > list.size()) return Collections.emptyList();
-//        for (String z : list.get(argsN - 1)){
-//            if (z.toLowerCase().startsWith(lastString.toLowerCase())){
-//                completion.add(z);
-//            }
-//        }
-
         String key = "ah";
 
         int index = 0;
@@ -72,8 +58,6 @@ public class MarketTabComplete implements TabCompleter {
 
         List<String> completion = new ArrayList<>(Collections.emptyList());
 
-        //System.out.println("key: " + key + "\targs: " + args_counter);
-
         if (strings[strings.length - 1].equalsIgnoreCase("")){
             completion = tab_complete.getOrDefault(key, Collections.emptyList()).get(Math.min(tab_complete.getOrDefault(key, Collections.emptyList()).size() - 1, args_counter));
         }
@@ -86,6 +70,5 @@ public class MarketTabComplete implements TabCompleter {
         }
 
         return completion;
-        //return tab_complete.getOrDefault(key, Collections.emptyList()).get(Math.min(tab_complete.getOrDefault(key, Collections.emptyList()).size() - 1, args_counter));
     }
 }

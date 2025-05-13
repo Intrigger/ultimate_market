@@ -1,8 +1,6 @@
 package org.intrigger.ultimate_market.utils;
 
 import java.util.*;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import java.sql.*;
 

@@ -1,119 +1,22 @@
 package org.intrigger.ultimate_market.utils.Interface;
-
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.intrigger.ultimate_market.Ultimate_market;
 import org.intrigger.ultimate_market.utils.ColorManager.ColorManager;
 import org.intrigger.ultimate_market.utils.Interface.Menus.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Function;
 
 import static org.intrigger.ultimate_market.Ultimate_market.*;
 
 public class GUI {
-    public String mainMenuTitle;
-    public String mySoldItemsTitle;
-    public String itemCategoriesTitle;
-    public String confirmBuyingMenuTitle;
-    public String myMarketButtonTitle;
-    public String buyRequestsMenuTitle;
-    public String myBuyRequestsMenuTitle;
-    public String tipButtonTitle;
-    public List<String> myMarketButtonLore;
-    public List<String> tipButtonLore;
 
-    public String updatePageButtonTitle;
-    public List<String> updatePageButtonLore;
-
-    public String previousPageButtonTitle;
-    public List<String> previousPageButtonLore;
-
-    public String nextPageButtonTitle;
-    public List<String> nextPageButtonLore;
-
-    public String itemCategoriesButtonTitle;
-    public List<String> itemCategoriesButtonLore;
-
-    public String seller;
     public String price;
-    public String currency;
-
-    public String backToMainMenuButtonTitle;
-    public List<String> backToMainMenuButtonLore;
-    public List<String> pressToWithdrawFromSaleLore;
-    public List<String> wrongCommandUsage;
-    public List<String> specifyThePrice;
-    public List<String> theItemToBeSoldMustBeHeldInTheHand;
-    public List<String> theItemToBeBoughtMustBeHeldInTheHand;
-    public List<String> commandCanBeUsedOnlyByPlayer;
-    public List<String> youSpecifiedWrongPrice;
-    public List<String> negativePrice;
-    public List<String> successfulPuttingUp;
-    public List<String> zeroPriceNotice;
-    public List<String> incorrectPrice;
-    public String itemAlreadySold;
-    public String cannotByYourOwnItem;
-    public String notEnoughMoney;
-    public String freeUpInventorySpace;
-    public String playerBoughtItemNotification;
-    public String youBoughtItemNotification;
-    public String youHaveWithdrawnItem;
-    public String sortingTypeButtonTitle;
-    public List<String> sortingTypeButtonLore;
-    public String itemSoldLimitReached;
-    public String confirmBuyingButtonTitle;
-    public String you_took_one_item_from_buy_requests;
-    public List<String> confirmBuyingButtonLore;
-    public String you_sold_item_notification;
-    public String wait_before_clicking_again;
-    public String selectAmountMenuTitle;
-    public String cancelBuyingButtonTitle;
-    public String buyEntirely;
-    public String buyByPieces;
-    public String pressLeftButton;
-    public String pressRightButton;
-    public String myBuyRequests;
-    public List<String> cancelBuyingButtonLore;
-    public List<String> myBuyRequestsButtonLore;
-    public String buyRequestsButton;
-    public String no_items_to_withdraw;
-    public String returned_money;
-    public String buy_request_created;
-    public String buy_request_received;
-    public String you_dont_have_this_item;
-    public String not_enough_items;
-    public String buy_request_is_closed;
-    public String cannot_sell_to_yourself;
-    public String cannot_sell_one_stack;
-    public String wrong_item_amount_specified;
-    public String buy_requests_limit_reached;
-    public List<String> buyRequestsButtonLore;
-    public List<String> my_buy_requests_lore;
-    public List<String> buy_requests_lore;
-    public List<String> low_evo_level;
-    public String help_menu_title;
-    public String help_menu_button_1;
-    public String help_menu_button_2;
-    public String help_menu_button_3;
-    public String help_menu_button_4;
-    public String dash;
-
-    public List<String> help_menu_lore_1;
-    public List<String> help_menu_lore_2;
-    public List<String> help_menu_lore_3;
-    public List<String> help_menu_lore_4;
-    public ArrayList<String> titles;
     public ColorManager cm;
 
     public Map<String, Menu> menus;
